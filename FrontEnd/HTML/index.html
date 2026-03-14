@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FormAI — Virtual Fitness Trainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles/main.css" />
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ── TOPBAR ─────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="logo">FORM<span>AI</span></div>
+
+    <nav class="topbar-center">
+      <button class="tab-btn active" data-tab="trainer" onclick="switchTab('trainer', this)">Trainer</button>
+      <button class="tab-btn" data-tab="history" onclick="switchTab('history', this)">History</button>
+      <button class="tab-btn" data-tab="progress" onclick="switchTab('progress', this)">Progress</button>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="streak-badge" id="streak-badge">🔥 <span id="streak-count">0</span> day streak</div>
+      <div class="level-badge">
+        <div class="level-dot"></div>
+        Level <span id="user-level">1</span> · <span id="user-title">Beginner</span>
+      </div>
+      <button class="settings-btn" onclick="toggleSettings()" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════
+       TAB: TRAINER
+  ══════════════════════════════════════════════════ -->
+  <main class="tab-content active" id="tab-trainer">
+    <div class="main-layout">
+
+      <!-- ── LEFT PANEL ───────────────────────────── -->
+      <aside class="left-panel">
+
+        <!-- Exercise selector -->
+        <div class="panel-section">
+          <p class="panel-label">Exercise</p>
+
+          <button class="exercise-btn active" data-ex="squat" onclick="setExercise('squat', this)">
+            <div class="ex-icon">🦵</div>
+            <div class="ex-info">
+              <div class="ex-name">Squats</div>
+              <div class="ex-detail">Lower body · Compound</div>
+            </div>
+            <div class="ex-check" id="ex-check-squat">✓</div>
+          </button>
+
+          <button class="exercise-btn" data-ex="pushup" onclick="setExercise('pushup', this)">
+            <div class="ex-icon">💪</div>
+            <div class="ex-info">
+              <div class="ex-name">Push-ups</div>
+              <div class="ex-detail">Upper body · Core</div>
+            </div>
+            <div class="ex-check" id="ex-check-pushup"></div>
+          </button>
+
+          <button class="exercise-btn" data-ex="curl" onclick="setExercise('curl', this)">
+            <div class="ex-icon">🏋️</div>
+            <div class="ex-info">
+              <div class="ex-name">Bicep Curls</div>
+              <div class="ex-detail">Arms · Isolation</div>
+            </div>
+            <div class="ex-check" id="ex-check-curl"></div>
+          </button>
+
+          <button class="exercise-btn" data-ex="lunge" onclick="setExercise('lunge', this)">
+            <div class="ex-icon">🚶</div>
+            <div class="ex-info">
+              <div class="ex-name">Lunges</div>
+              <div class="ex-detail">Lower body · Balance</div>
+            </div>
+            <div class="ex-check" id="ex-check-lunge"></div>
+          </button>
+
+          <button class="exercise-btn" data-ex="jumping_jack" onclick="setExercise('jumping_jack', this)">
+            <div class="ex-icon">⭐</div>
+            <div class="ex-info">
+              <div class="ex-name">Jumping Jacks</div>
+              <div class="ex-detail">Cardio · Full body</div>
+            </div>
+            <div class="ex-check" id="ex-check-jumping_jack"></div>
+          </button>
+        </div>
+
+        <!-- Session stats -->
+        <div class="panel-section">
+          <p class="panel-label">Session stats</p>
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <div class="mini-stat-val" id="stat-reps">0</div>
+              <div class="mini-stat-label">Total reps</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-val" id="stat-cal">0</div>
+              <div class="mini-stat-label">Calories</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-val" id="stat-sets">0</div>
+              <div class="mini-stat-label">Sets done</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-val" id="stat-acc">—</div>
+              <div class="mini-stat-label">Avg accuracy</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Badges -->
+        <div class="panel-section">
+          <p class="panel-label">Badges</p>
+          <div class="badges-grid" id="badges-grid">
+            <div class="badge earned" title="Complete your first set">⚡ First Set</div>
+            <div class="badge" title="10 reps in a row with good form">🎯 10-Streak</div>
+            <div class="badge" title="25 perfect reps">🏅 25 Perfect</div>
+            <div class="badge" title="50 total reps in one session">🔥 50 Reps</div>
+            <div class="badge" title="Complete a 7-day streak">📅 7-Day</div>
+            <div class="badge" title="Reach 90%+ form score">💎 Elite Form</div>
+          </div>
+        </div>
+
+        <!-- Target sets -->
+        <div class="panel-section">
+          <p class="panel-label">Set target</p>
+          <div class="set-target-row">
+            <button class="target-btn" onclick="adjustTarget(-1)">−</button>
+            <span id="target-display">3 sets × 10 reps</span>
+            <button class="target-btn" onclick="adjustTarget(1)">+</button>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ── CENTER PANEL ──────────────────────────── -->
+      <section class="center-panel">
+
+        <div class="camera-area" id="camera-area">
+
+          <!-- Waiting state (shown before camera starts) -->
+          <div class="camera-waiting" id="camera-waiting">
+            <div class="waiting-icon">📷</div>
+            <h2 class="waiting-title">Camera not active</h2>
+            <p class="waiting-desc">Press <strong>Start</strong> to activate your webcam and begin tracking</p>
+          </div>
+
+          <!-- Live video feed from backend -->
+          <img class="camera-feed" id="camera-feed"
+               src=""
+               alt="Camera feed"
+               style="display:none;" />
+
+          <!-- Corner frame decorations -->
+          <div class="corner-frame corner-tl"></div>
+          <div class="corner-frame corner-tr"></div>
+          <div class="corner-frame corner-bl"></div>
+          <div class="corner-frame corner-br"></div>
+
+          <!-- LIVE indicator -->
+          <div class="live-indicator" id="live-indicator" style="display:none;">
+            <div class="live-dot"></div>
+            LIVE
+          </div>
+
+          <!-- Rep counter HUD -->
+          <div class="hud-reps" id="hud-reps">
+            <span class="hud-rep-num" id="hud-rep-num">0</span>
+            <span class="hud-rep-label">REPS</span>
+          </div>
+
+          <!-- Phase label -->
+          <div class="hud-phase" id="hud-phase">Ready — stand in frame</div>
+
+          <!-- Form feedback -->
+          <div class="hud-feedback" id="hud-feedback">Waiting for pose detection…</div>
+
+          <!-- Joint angle overlays -->
+          <div class="angle-pill angle-left" id="angle-left">
+            <div class="angle-val" id="angle-val-left">—</div>
+            <div class="angle-lbl" id="angle-lbl-left">Knee angle</div>
+          </div>
+          <div class="angle-pill angle-right" id="angle-right">
+            <div class="angle-val" id="angle-val-right">—</div>
+            <div class="angle-lbl" id="angle-lbl-right">Hip angle</div>
+          </div>
+
+          <!-- Pose confidence bar -->
+          <div class="confidence-bar-wrap" id="confidence-wrap" style="display:none;">
+            <div class="confidence-label">Pose confidence</div>
+            <div class="confidence-track">
+              <div class="confidence-fill" id="confidence-fill" style="width:0%"></div>
+            </div>
+          </div>
+
+        </div><!-- /camera-area -->
+
+        <!-- CONTROL BAR -->
+        <div class="control-bar">
+          <button class="ctrl-btn primary" id="start-btn" onclick="toggleWorkout()">
+            <span id="start-btn-label">▶ Start</span>
+          </button>
+          <button class="ctrl-btn" onclick="resetCurrentSet()">↺ Reset set</button>
+          <button class="ctrl-btn" id="voice-btn" onclick="toggleVoice()">🔇 Voice off</button>
+          <button class="ctrl-btn danger" onclick="endSession()">■ End session</button>
+
+          <div class="ctrl-divider"></div>
+
+          <div class="timer-block">
+            <div class="timer-label">Session time</div>
+            <div class="timer-display" id="timer-display">00:00</div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ── RIGHT PANEL ───────────────────────────── -->
+      <aside class="right-panel">
+
+        <!-- Form score ring -->
+        <div class="panel-section form-score-section">
+          <p class="panel-label">Form score</p>
+          <div class="score-ring-container">
+            <svg class="score-ring-svg" viewBox="0 0 120 120" width="120" height="120">
+              <circle class="score-track" cx="60" cy="60" r="50"/>
+              <circle class="score-fill" id="score-ring-fill" cx="60" cy="60" r="50"
+                stroke-dasharray="314"
+                stroke-dashoffset="63"
+                transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="score-overlay">
+              <div class="score-num" id="score-num">80</div>
+              <div class="score-sub">/ 100</div>
+            </div>
+          </div>
+          <div class="score-grade" id="score-grade">Good</div>
+        </div>
+
+        <!-- Realtime coach feedback -->
+        <div class="panel-section feedback-section">
+          <p class="panel-label">Coach feedback</p>
+          <div class="feedback-list" id="feedback-list">
+            <div class="feedback-item">
+              <div class="fi-dot good"></div>
+              <div class="fi-text"><strong>Waiting for movement</strong> — start your first rep</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- This-week mini chart -->
+        <div class="panel-section">
+          <p class="panel-label">This week</p>
+          <div class="week-chart" id="week-chart">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Daily challenge -->
+        <div class="panel-section">
+          <p class="panel-label">Daily challenge</p>
+          <div class="challenge-card">
+            <div class="challenge-name" id="challenge-name">Squat Burn</div>
+            <div class="challenge-desc" id="challenge-desc">
+              Complete 50 squats with 80%+ form score.
+            </div>
+            <div class="challenge-progress-track">
+              <div class="challenge-progress-fill" id="challenge-fill" style="width:0%"></div>
+            </div>
+            <div class="challenge-meta">
+              <span id="challenge-count">0 / 50 reps</span>
+              <span id="challenge-pct">0%</span>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+    </div><!-- /main-layout -->
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       TAB: HISTORY
+  ══════════════════════════════════════════════════ -->
+  <main class="tab-content" id="tab-history">
+    <div class="history-page">
+      <div class="history-header">
+        <h1 class="page-title">Workout History</h1>
+        <p class="page-sub">Your last 30 sessions</p>
+      </div>
+
+      <div class="history-list" id="history-list">
+        <!-- Populated by JS from localStorage -->
+        <div class="history-empty" id="history-empty">
+          No sessions recorded yet. Complete your first workout to see it here!
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       TAB: PROGRESS
+  ══════════════════════════════════════════════════ -->
+  <main class="tab-content" id="tab-progress">
+    <div class="progress-page">
+      <div class="progress-header">
+        <h1 class="page-title">Progress Analytics</h1>
+        <p class="page-sub">Track your improvement over time</p>
+      </div>
+
+      <div class="progress-grid">
+
+        <div class="progress-card">
+          <div class="progress-card-title">Reps per Session</div>
+          <canvas id="chart-reps" width="400" height="200"></canvas>
+        </div>
+
+        <div class="progress-card">
+          <div class="progress-card-title">Form Accuracy %</div>
+          <canvas id="chart-form" width="400" height="200"></canvas>
+        </div>
+
+        <div class="progress-card stat-summary">
+          <div class="progress-card-title">All-time Stats</div>
+          <div class="alltime-grid">
+            <div class="alltime-stat">
+              <div class="alltime-val" id="at-reps">0</div>
+              <div class="alltime-lbl">Total reps</div>
+            </div>
+            <div class="alltime-stat">
+              <div class="alltime-val" id="at-sessions">0</div>
+              <div class="alltime-lbl">Sessions</div>
+            </div>
+            <div class="alltime-stat">
+              <div class="alltime-val" id="at-cal">0</div>
+              <div class="alltime-lbl">Calories burned</div>
+            </div>
+            <div class="alltime-stat">
+              <div class="alltime-val" id="at-time">0m</div>
+              <div class="alltime-lbl">Total time</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-card">
+          <div class="progress-card-title">Exercise Breakdown</div>
+          <div class="ex-breakdown" id="ex-breakdown">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+</div><!-- /app -->
+
+<!-- ── SETTINGS MODAL ───────────────────────────────── -->
+<div class="modal-overlay" id="settings-overlay" onclick="closeSettings(event)">
+  <div class="modal" id="settings-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Settings</h2>
+      <button class="modal-close" onclick="toggleSettings()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="setting-row">
+        <label class="setting-label">Voice coaching</label>
+        <label class="toggle">
+          <input type="checkbox" id="setting-voice" onchange="updateSettings()" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <label class="setting-label">Show angle overlays</label>
+        <label class="toggle">
+          <input type="checkbox" id="setting-angles" checked onchange="updateSettings()" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <label class="setting-label">Rep beep sound</label>
+        <label class="toggle">
+          <input type="checkbox" id="setting-beep" checked onchange="updateSettings()" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+
+      <div class="setting-row">
+        <label class="setting-label">Camera resolution</label>
+        <select id="setting-resolution" onchange="updateSettings()">
+          <option value="480">480p (faster)</option>
+          <option value="720" selected>720p (recommended)</option>
+          <option value="1080">1080p (best quality)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <label class="setting-label">Form sensitivity</label>
+        <select id="setting-sensitivity" onchange="updateSettings()">
+          <option value="lenient">Lenient</option>
+          <option value="normal" selected>Normal</option>
+          <option value="strict">Strict</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <label class="setting-label">Username</label>
+        <input type="text" id="setting-username" placeholder="Enter your name" class="setting-input" />
+      </div>
+
+      <button class="ctrl-btn primary" onclick="saveSettings()" style="width:100%;margin-top:16px;">Save settings</button>
+      <button class="ctrl-btn danger" onclick="clearAllData()" style="width:100%;margin-top:8px;">Clear all data</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SESSION SUMMARY MODAL ────────────────────────── -->
+<div class="modal-overlay" id="summary-overlay">
+  <div class="modal" id="summary-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Session Complete 🎉</h2>
+    </div>
+    <div class="modal-body">
+      <div class="summary-grid">
+        <div class="summary-stat">
+          <div class="summary-val" id="sum-reps">0</div>
+          <div class="summary-lbl">Total reps</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-val" id="sum-cal">0</div>
+          <div class="summary-lbl">Calories</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-val" id="sum-time">00:00</div>
+          <div class="summary-lbl">Duration</div>
+        </div>
+        <div class="summary-stat">
+          <div class="summary-val" id="sum-form">0%</div>
+          <div class="summary-lbl">Avg form</div>
+        </div>
+      </div>
+
+      <div class="summary-badges" id="summary-badges"></div>
+
+      <button class="ctrl-btn primary" onclick="closeSummary()" style="width:100%;margin-top:20px;">Keep going 💪</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCRIPTS ───────────────────────────────────────── -->
+<!-- SocketIO client from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.5/client-dist/socket.io.min.js"></script>
+<script src="/script/app.js"></script>
+
+</body>
+</html>
