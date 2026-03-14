@@ -1,5 +1,75 @@
 [
   {
+    "id": 1773528067417,
+    "date": "2026-03-14T22:41:07.417894Z",
+    "exercise": "squat",
+    "reps": 2,
+    "sets": 0,
+    "calories": 3,
+    "duration": 59,
+    "formScore": 19
+  },
+  {
+    "id": 1773527565008,
+    "date": "2026-03-14T22:32:45.008757Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 12,
+    "formScore": 0
+  },
+  {
+    "id": 1773522535244,
+    "date": "2026-03-14T21:08:55.244203Z",
+    "exercise": "jumping_jack",
+    "reps": 17,
+    "sets": 1,
+    "calories": 9,
+    "duration": 95,
+    "formScore": 70
+  },
+  {
+    "id": 1773521332643,
+    "date": "2026-03-14T20:48:52.645893Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 11,
+    "formScore": 0
+  },
+  {
+    "id": 1773521040679,
+    "date": "2026-03-14T20:44:00.681459Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 8,
+    "formScore": 0
+  },
+  {
+    "id": 1773513175423,
+    "date": "2026-03-14T18:32:55.423887Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 8,
+    "formScore": 0
+  },
+  {
+    "id": 1773513150546,
+    "date": "2026-03-14T18:32:30.548975Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 6,
+    "formScore": 0
+  },
+  {
     "id": 1773506058140,
     "date": "2026-03-14T16:34:18.140591Z",
     "exercise": "pushup",

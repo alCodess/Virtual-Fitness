@@ -82,7 +82,6 @@ EXERCISE_CONFIG = {
     },
 }
 
-
 # ── FEEDBACK MESSAGES ────────────────────────────────────
 # Keyed by exercise → issue tag → message shown in the UI.
 FEEDBACK = {

@@ -234,6 +234,14 @@ function handleRepData(data) {
   }
 }
 
+/*---VOICES ---------------------------------------------*/
+let availableVoices = [];
+
+window.speechSynthesis.onvoiceschanged = () => {
+  availableVoices = window.speechSynthesis.getVoices();
+  console.log("Voices loaded:", availableVoices.map(v => v.name));
+}
+
 /* ── WORKOUT CONTROL ────────────────────────────────────── */
 function toggleWorkout() {
   if (!state.isRunning) {
@@ -450,11 +458,46 @@ function toggleVoice() {
 
 function speak(text) {
   if (!window.speechSynthesis) return;
+  if (!state.voiceOn) return;
+
+  const clean = text.replace(/<[^>]*>/g, '').trim();
+  if (!clean) return;
+
   const utt = new SpeechSynthesisUtterance(text);
+
+  const voices = window.speechSynthesis.getVoices();
+  // const preferred = voices.find(v => v.name.includes("David"))
+  //                 || voices.find(v => v.name.includes("Google"))
+  //                 || voices[0];
+  
+  const preferred = availableVoices.find(v => v.name.includes('David'))
+               || availableVoices[0];
+
+  if (preferred) utt.voice = preferred;
+
   utt.rate = 1.1;
   utt.pitch = 1;
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utt);
+}
+
+function testVoice() {
+  const testTips = [
+    "Go deeper, aim for 90 degrees at the knee",
+    "Keep your chest up, avoid rounding forward",
+    "Good rep, solid depth and form",
+    "Slow down, control the descent",
+    "Keep your knees tracking over your toes",
+  ];
+
+  // Pick a random tip each time you click
+  const tip = testTips[Math.floor(Math.random() * testTips.length)];
+
+  // Force voiceOn to true temporarily so speak() doesn't block it
+  const wasOn = state.voiceOn;
+  state.voiceOn = true;
+  speak(tip);
+  state.voiceOn = wasOn;
 }
 
 function speakRep(count) {
