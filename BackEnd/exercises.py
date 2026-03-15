@@ -29,7 +29,7 @@ from pose_engine import PoseEngine, LM
 SENSITIVITY_OFFSET = {
     "lenient": 5,   # angles are ±10° more forgiving
     "normal":   0,
-    "strict":  -20,  # angles are ±10° more demanding
+    "strict":  -50,  # angles are ±10° more demanding
 }
 
 
