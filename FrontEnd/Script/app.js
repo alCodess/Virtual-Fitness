@@ -328,6 +328,7 @@ function onRepCompleted() {
   if (state.reps >= state.targetReps) {
     state.sets++;
     state.reps = 0;
+    pauseWorkout();
     el('hud-phase').textContent = `Set ${state.sets} complete! Rest…`;
     if (state.settings.voice && state.voiceOn) speak(`Set ${state.sets} complete. Rest up.`);
   }

@@ -429,10 +429,49 @@ def on_update_settings(data):
         g.sensitivity = sensitivity
     print(f"[FormAI] Sensitivity → {sensitivity}")
     emit("settings_updated", {"sensitivity": sensitivity})
+ #Schedule event 
+SCHEDULE_FILE = BACKEND_DIR / "schedule.json"
 
+def load_schedule():
+    if SCHEDULE_FILE.exists():
+        return json.loads(SCHEDULE_FILE.read_text())
+    return {day: [] for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+
+def save_schedule(data):
+    SCHEDULE_FILE.write_text(json.dumps(data, indent=2))
+
+# --- New Routes ---
+
+@app.route("/api/schedule", methods=["GET"])
+def get_schedule():
+    return jsonify(load_schedule())
+
+@app.route("/api/schedule", methods=["POST"])
+def update_schedule():
+    """Body: { "day": "Monday", "exercises": ["squat", "pushup"] }"""
+    data = request.get_json()
+    day = data.get("day")
+    exercises = data.get("exercises", [])
+    
+    full_schedule = load_schedule()
+    if day in full_schedule:
+        full_schedule[day] = exercises
+        save_schedule(full_schedule)
+        return jsonify({"status": "success"})
+    return jsonify({"status": "error", "message": "Invalid day"}), 400
+
+@app.route("/api/schedule/today")
+def get_today_schedule():
+    import datetime
+    day_name = datetime.datetime.now().strftime("%A")
+    full_schedule = load_schedule() # Uses your load_schedule function
+    return jsonify({
+        "day": day_name, 
+        "exercises": full_schedule.get(day_name, [])
+    })
 
 # ── ENTRY POINT ───────────────────────────────────────────
-if __name__ == "__main__":
+if __name__ == "__main__": 
     print("=" * 52)
     print("  FormAI — Virtual Fitness Trainer")
     print(f"  Tracking available : {TRACKING_AVAILABLE}")
@@ -445,4 +484,5 @@ if __name__ == "__main__":
         debug=True,
         use_reloader=False,          # reloader would restart camera thread
         allow_unsafe_werkzeug=True,
-    )
+    ) 
+   

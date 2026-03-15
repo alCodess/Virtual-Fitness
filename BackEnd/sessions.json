@@ -1,5 +1,305 @@
 [
   {
+    "id": 1773572566192,
+    "date": "2026-03-15T11:02:46.192451Z",
+    "exercise": "jumping_jack",
+    "reps": 10,
+    "sets": 1,
+    "calories": 5,
+    "duration": 44,
+    "formScore": 70
+  },
+  {
+    "id": 1773572517646,
+    "date": "2026-03-15T11:01:57.646595Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 15,
+    "formScore": 99
+  },
+  {
+    "id": 1773571342027,
+    "date": "2026-03-15T10:42:22.027570Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 10,
+    "formScore": 85
+  },
+  {
+    "id": 1773549060350,
+    "date": "2026-03-15T04:31:00.350064Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 14,
+    "formScore": 14
+  },
+  {
+    "id": 1773548908687,
+    "date": "2026-03-15T04:28:28.687307Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 13,
+    "formScore": 0
+  },
+  {
+    "id": 1773548865915,
+    "date": "2026-03-15T04:27:45.915560Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 14,
+    "formScore": 11
+  },
+  {
+    "id": 1773548095498,
+    "date": "2026-03-15T04:14:55.498869Z",
+    "exercise": "squat",
+    "reps": 3,
+    "sets": 0,
+    "calories": 2,
+    "duration": 39,
+    "formScore": 17
+  },
+  {
+    "id": 1773548051377,
+    "date": "2026-03-15T04:14:11.377810Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 19,
+    "formScore": 0
+  },
+  {
+    "id": 1773547864897,
+    "date": "2026-03-15T04:11:04.897115Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 1,
+    "duration": 32,
+    "formScore": 10
+  },
+  {
+    "id": 1773546057391,
+    "date": "2026-03-15T03:40:57.391516Z",
+    "exercise": "squat",
+    "reps": 2,
+    "sets": 0,
+    "calories": 1,
+    "duration": 15,
+    "formScore": 38
+  },
+  {
+    "id": 1773546030530,
+    "date": "2026-03-15T03:40:30.530950Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 1,
+    "duration": 26,
+    "formScore": 74
+  },
+  {
+    "id": 1773546030221,
+    "date": "2026-03-15T03:40:30.221360Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 1,
+    "duration": 26,
+    "formScore": 74
+  },
+  {
+    "id": 1773546002884,
+    "date": "2026-03-15T03:40:02.884742Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 1,
+    "duration": 48,
+    "formScore": 0
+  },
+  {
+    "id": 1773538205885,
+    "date": "2026-03-15T01:30:05.885318Z",
+    "exercise": "pushup",
+    "reps": 3,
+    "sets": 0,
+    "calories": 15,
+    "duration": 354,
+    "formScore": 35
+  },
+  {
+    "id": 1773537848964,
+    "date": "2026-03-15T01:24:08.964420Z",
+    "exercise": "pushup",
+    "reps": 10,
+    "sets": 1,
+    "calories": 11,
+    "duration": 188,
+    "formScore": 23
+  },
+  {
+    "id": 1773537659365,
+    "date": "2026-03-15T01:20:59.365887Z",
+    "exercise": "pushup",
+    "reps": 1,
+    "sets": 0,
+    "calories": 3,
+    "duration": 67,
+    "formScore": 30
+  },
+  {
+    "id": 1773537658972,
+    "date": "2026-03-15T01:20:58.972957Z",
+    "exercise": "pushup",
+    "reps": 1,
+    "sets": 0,
+    "calories": 3,
+    "duration": 67,
+    "formScore": 30
+  },
+  {
+    "id": 1773537585632,
+    "date": "2026-03-15T01:19:45.632454Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 7,
+    "formScore": 0
+  },
+  {
+    "id": 1773537541903,
+    "date": "2026-03-15T01:19:01.903571Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 4,
+    "formScore": 0
+  },
+  {
+    "id": 1773537524823,
+    "date": "2026-03-15T01:18:44.823565Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 9,
+    "formScore": 0
+  },
+  {
+    "id": 1773536214036,
+    "date": "2026-03-15T00:56:54.036037Z",
+    "exercise": "squat",
+    "reps": 1,
+    "sets": 0,
+    "calories": 1,
+    "duration": 27,
+    "formScore": 14
+  },
+  {
+    "id": 1773536183200,
+    "date": "2026-03-15T00:56:23.200990Z",
+    "exercise": "squat",
+    "reps": 2,
+    "sets": 0,
+    "calories": 2,
+    "duration": 40,
+    "formScore": 16
+  },
+  {
+    "id": 1773536139171,
+    "date": "2026-03-15T00:55:39.172137Z",
+    "exercise": "squat",
+    "reps": 12,
+    "sets": 1,
+    "calories": 13,
+    "duration": 221,
+    "formScore": 9
+  },
+  {
+    "id": 1773534125243,
+    "date": "2026-03-15T00:22:05.243313Z",
+    "exercise": "curl",
+    "reps": 56,
+    "sets": 5,
+    "calories": 29,
+    "duration": 250,
+    "formScore": 58
+  },
+  {
+    "id": 1773534043939,
+    "date": "2026-03-15T00:20:43.939525Z",
+    "exercise": "curl",
+    "reps": 56,
+    "sets": 5,
+    "calories": 26,
+    "duration": 169,
+    "formScore": 58
+  },
+  {
+    "id": 1773533867240,
+    "date": "2026-03-15T00:17:47.240497Z",
+    "exercise": "pushup",
+    "reps": 11,
+    "sets": 1,
+    "calories": 6,
+    "duration": 58,
+    "formScore": 27
+  },
+  {
+    "id": 1773533747063,
+    "date": "2026-03-15T00:15:47.063774Z",
+    "exercise": "jumping_jack",
+    "reps": 1,
+    "sets": 0,
+    "calories": 1,
+    "duration": 26,
+    "formScore": 70
+  },
+  {
+    "id": 1773533701456,
+    "date": "2026-03-15T00:15:01.456618Z",
+    "exercise": "jumping_jack",
+    "reps": 2,
+    "sets": 0,
+    "calories": 4,
+    "duration": 97,
+    "formScore": 70
+  },
+  {
+    "id": 1773533066859,
+    "date": "2026-03-15T00:04:26.859356Z",
+    "exercise": "jumping_jack",
+    "reps": 2,
+    "sets": 0,
+    "calories": 3,
+    "duration": 71,
+    "formScore": 66
+  },
+  {
+    "id": 1773529853517,
+    "date": "2026-03-14T23:10:53.518004Z",
+    "exercise": "curl",
+    "reps": 7,
+    "sets": 0,
+    "calories": 4,
+    "duration": 60,
+    "formScore": 70
+  },
+  {
     "id": 1773528067417,
     "date": "2026-03-14T22:41:07.417894Z",
     "exercise": "squat",
