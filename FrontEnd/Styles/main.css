@@ -950,11 +950,4 @@ canvas {
   .topbar-center { display: none; }
 }
 
-/* ── DAILY SCHEDULE TAB ────────────────────────────────── */
-.schedule-page {
-  padding: 32px;
-  overflow-y: auto;
-  height: 100%;
-  flex: 1;
-}
 .schedule-header { margin-bottom: 28px; }
