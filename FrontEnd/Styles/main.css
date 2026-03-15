@@ -1077,12 +1077,8 @@ canvas { display: block; max-width: 100%; height: auto; }
   .left-panel  { display: none; }
   .topbar-center { display: none; } /* hide tab buttons in topbar on mobile */
 
-<<<<<<< HEAD
-.schedule-header { margin-bottom: 28px; }
-=======
   /* Profile and progress grids collapse to single column */
   .profile-grid { grid-template-columns: 1fr; }
   .progress-card.stat-summary { grid-column: span 1; }
   .alltime-grid { grid-template-columns: repeat(2, 1fr); } /* 2-col instead of 4 */
 }
->>>>>>> 62841aaaf8d76295cd4da8754911fda280c8f051
