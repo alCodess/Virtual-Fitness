@@ -1,5 +1,105 @@
 [
   {
+    "id": 1773572992634,
+    "date": "2026-03-15T11:09:52.634516Z",
+    "exercise": "jumping_jack",
+    "reps": 0,
+    "sets": 0,
+    "calories": 1,
+    "duration": 26,
+    "formScore": 70
+  },
+  {
+    "id": 1773572948647,
+    "date": "2026-03-15T11:09:08.647521Z",
+    "exercise": "jumping_jack",
+    "reps": 0,
+    "sets": 0,
+    "calories": 1,
+    "duration": 29,
+    "formScore": 70
+  },
+  {
+    "id": 1773572823627,
+    "date": "2026-03-15T11:07:03.627672Z",
+    "exercise": "jumping_jack",
+    "reps": 0,
+    "sets": 0,
+    "calories": 5,
+    "duration": 130,
+    "formScore": 70
+  },
+  {
+    "id": 1773572689505,
+    "date": "2026-03-15T11:04:49.505743Z",
+    "exercise": "jumping_jack",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 15,
+    "formScore": 70
+  },
+  {
+    "id": 1773572642314,
+    "date": "2026-03-15T11:04:02.314884Z",
+    "exercise": "jumping_jack",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 6,
+    "formScore": 0
+  },
+  {
+    "id": 1773572627328,
+    "date": "2026-03-15T11:03:47.329757Z",
+    "exercise": "jumping_jack",
+    "reps": 1,
+    "sets": 0,
+    "calories": 1,
+    "duration": 41,
+    "formScore": 70
+  },
+  {
+    "id": 1773561211660,
+    "date": "2026-03-15T07:53:31.660331Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 9,
+    "formScore": 0
+  },
+  {
+    "id": 1773560795287,
+    "date": "2026-03-15T07:46:35.289165Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 12,
+    "formScore": 2
+  },
+  {
+    "id": 1773549935517,
+    "date": "2026-03-15T04:45:35.519745Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 0,
+    "duration": 0,
+    "formScore": 0
+  },
+  {
+    "id": 1773547672286,
+    "date": "2026-03-15T04:07:52.288432Z",
+    "exercise": "squat",
+    "reps": 0,
+    "sets": 0,
+    "calories": 1,
+    "duration": 28,
+    "formScore": 0
+  },
+  {
     "id": 1773528067417,
     "date": "2026-03-14T22:41:07.417894Z",
     "exercise": "squat",
