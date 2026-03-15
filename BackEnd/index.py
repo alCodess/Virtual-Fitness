@@ -255,24 +255,6 @@ def serve_styles(filename):
     """Serve CSS files from FrontEnd/Styles/."""
     return send_from_directory(str(STYLES_DIR), filename)
 
-@app.route('/favicon.ico')
-def favicon():
-    import os
-    return send_from_directory(
-        os.path.join(app.root_path),
-        'favicon.ico',
-        mimetype='image/x-icon'
-    )
-
-@app.route("/script/<path:filename>")
-def serve_script(filename):
-    return send_from_directory(str(SCRIPT_DIR), filename)
-
-@app.route("/images/<path:filename>")
-def serve_images(filename):
-    images_dir = FRONTEND_DIR / "Images"
-    return send_from_directory(str(images_dir), filename)
-
 @app.route("/video_feed")
 def video_feed():
     """
