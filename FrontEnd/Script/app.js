@@ -585,9 +585,35 @@ function onRepCompleted() {
   if (state.reps >= state.targetReps) {
     state.sets++;
     state.reps = 0;
-    pauseWorkout();
+    state.isRunning = false;
+    stopTimer();
+    if (socket) socket.emit('pause_tracking');
+
     el('hud-phase').textContent = `Set ${state.sets} complete! Rest…`;
     if (state.voiceOn) speak(`Set ${state.sets} complete. Rest up.`);
+
+    el('camera-feed').src = '';
+    el('camera-feed').style.display = 'none';
+    el('camera-waiting').style.display = 'flex';
+    el('live-indicator').style.display = 'none';
+
+    const title = document.querySelector('.waiting-title');
+    const desc = document.querySelector('.waiting-desc');
+
+    if (title) textContent = 'Rest Time';
+    if (desc) textContent = 'Press Resume when you are ready for the next set';
+
+    if (title) {
+      title.textContent = 'Camera not active';
+    }
+
+    if (!state.isRunning) {
+      toggleSession();
+    }
+
+    if (desc) desc.textContent = 'Press Start to activiate your webcam and begin tracking';
+
+    
   }
 
   updateStats();

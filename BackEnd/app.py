@@ -67,10 +67,10 @@ except ImportError:
 # ── FLASK APP ────────────────────────────────────────────
 app = Flask(
     __name__,
-    template_folder=str(TEMPLATES_DIR),  # render_template looks here
-    static_folder=str(SCRIPT_DIR),       # url_for('static') resolves here
-    static_url_path="/script",           # served at  /script/app.js
+    template_folder=str(TEMPLATES_DIR),
+    static_folder=None,
 )
+
 app.config["SECRET_KEY"] = "formai-secret-change-in-production"
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
@@ -84,7 +84,7 @@ class AppState:
         self.lock             = threading.Lock()
         self.is_tracking      = False
         self.current_exercise = "squat"
-        self.sensitivity      = "normal"   # lenient | normal | strict
+        self.sensitivity      = "strict"   # lenient | normal | strict
         self.cap              = None       # cv2.VideoCapture instance
         self.latest_frame     = None       # most recent JPEG bytes
         self.frame_event      = threading.Event()
@@ -250,12 +250,28 @@ def index():
     """Serve FrontEnd/HTML/index.html."""
     return render_template("index.html")
 
-
 @app.route("/styles/<path:filename>")
 def serve_styles(filename):
     """Serve CSS files from FrontEnd/Styles/."""
     return send_from_directory(str(STYLES_DIR), filename)
 
+@app.route('/favicon.ico')
+def favicon():
+    import os
+    return send_from_directory(
+        os.path.join(app.root_path),
+        'favicon.ico',
+        mimetype='image/x-icon'
+    )
+
+@app.route("/script/<path:filename>")
+def serve_script(filename):
+    return send_from_directory(str(SCRIPT_DIR), filename)
+
+@app.route("/images/<path:filename>")
+def serve_images(filename):
+    images_dir = FRONTEND_DIR / "Images"
+    return send_from_directory(str(images_dir), filename)
 
 @app.route("/video_feed")
 def video_feed():
