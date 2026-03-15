@@ -110,7 +110,7 @@ class PoseEngine:
         options = mp_vision.PoseLandmarkerOptions(
             base_options=base_options,
             output_segmentation_masks=False,
-            num_poses=3,
+            num_poses=1,
             min_pose_detection_confidence=0.6,
             min_pose_presence_confidence=0.6,
             min_tracking_confidence=0.5,
@@ -146,7 +146,6 @@ class PoseEngine:
         # We only track the first person.
         landmarks = detection.pose_landmarks[0]
 
-        self.highlightPerson(annotated, landmarks)
         self._draw_skeleton(annotated, landmarks)
         self._draw_confidence_dot(annotated, landmarks)
 
@@ -187,40 +186,6 @@ class PoseEngine:
         color = (53, 241, 200) if avg >= 0.75 else (0, 140, 255) if avg >= 0.5 else (50, 50, 255)
         cv2.circle(frame, (28, 28), 10, color,     -1)
         cv2.circle(frame, (28, 28), 10, (0, 0, 0),  1)
-
-    def highlightPerson(self, frame, landmarks):
-        xValues = []
-        yValues = []
-        height, width, _ = frame.shape
-
-        # for i in landmarks:
-        #     if i.visibility > 0.5:
-        #         xValues.append(i.x)
-        #         yValues.append(i.y)
-
-        handIndices = [LM.LEFT_WRIST, LM.RIGHT_WRIST]
-
-        for i in handIndices:
-            landmark = landmarks[i]
-            if landmark.visibility > 0.5:
-                xValues.append(landmark.x)
-                yValues.append(landmark.y)
-            
-        if not xValues or not yValues:
-            return
-
-        highestX = min(max(xValues) * 1.5, 1.0)
-        lowestX = max(min(xValues) * 0.9, 0.0)
-        highestY = min(max(yValues) * 1.5, 1.0)
-        lowestY = max(min(yValues) * 0.9, 0.0)
-
-        pixelsLeft = int(lowestX * width)
-        pixelsRight = int(highestX * width)
-        pixelsTop = int(lowestY * height)
-        pixelsBottom = int(highestY * height)
-    
-        cv2.rectangle(frame, (pixelsLeft, pixelsTop), (pixelsRight, pixelsBottom), color=(53, 241, 200), thickness=1)
-
 
     # ── STATIC UTILITIES ──────────────────────────────────
     @staticmethod

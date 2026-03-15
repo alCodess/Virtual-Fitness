@@ -40,10 +40,12 @@ FormAI watches you work out through your webcam. It detects your body position u
 ```
 FormAI/
 ├── BackEnd/
+    ├── _init_.py
 │   ├── index.py              ← Flask + Flask-SocketIO server
 │   ├── pose_engine.py      ← MediaPipe pose detection wrapper
 │   ├── exercises.py        ← Rep counting and form analysis per exercise
-│   └── sessions.json       ← Auto-created on first run (server-side session log)
+│   ├── sessions.json       ← Auto-created on first run (server-side session log)
+    └── requirements.txt
 │
 └── FrontEnd/
     ├── HTML/

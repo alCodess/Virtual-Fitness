@@ -27,9 +27,9 @@ from pose_engine import PoseEngine, LM
 # Each exercise defines "down" and "up" angles.
 # Sensitivity shifts how strict the thresholds are.
 SENSITIVITY_OFFSET = {
-    "lenient": 5,   # angles are ±10° more forgiving
+    "lenient": 10,   # angles are ±10° more forgiving
     "normal":   0,
-    "strict":  -50,  # angles are ±10° more demanding
+    "strict":  -10,  # angles are ±10° more demanding
 }
 
 
@@ -233,10 +233,8 @@ class ExerciseTracker:
             # Reached bottom position
             if self.phase == "up":
                 self.phase = "down"
-                self.form_issues = [] # Start a timer
-# VALIDATION: 
-    # 1. Rep must be faster than 4 seconds (Sitting usually lasts longer)
-    # 2. Hip must have moved vertically (not just knees bending)
+                self.form_issues = []
+
             # Check depth and lean
             if knee_angle > cfg["knee_down"] + 15 + offset:
                 issues.append("too_shallow")
