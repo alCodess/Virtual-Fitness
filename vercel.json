@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "functions": {
+    "BackEnd/api/index.py": {
+      "runtime": "python3.11",
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "routes": [
+    { "src": "/(.*)", "dest": "BackEnd/api/index.py" }
+  ]
+}
