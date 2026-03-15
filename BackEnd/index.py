@@ -32,7 +32,11 @@ import json
 import time
 import threading
 import datetime
+import os
 from pathlib import Path
+
+# Silence TensorFlow/MediaPipe info & warning logs (keeps console clean on Vercel)
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
 
 import cv2
 from flask import Flask, Response, render_template, jsonify, request, send_from_directory
@@ -50,18 +54,17 @@ SESSIONS_FILE = BACKEND_DIR / "sessions.json"
 
 
 # ── OPTIONAL TRACKING MODULES ────────────────────────────
-# pose_engine.py and exercises.py live in BackEnd/ alongside
-# this file. Until they are created the app runs in demo mode
-# — the UI fully loads and all buttons work, but the webcam
-# feed and automatic rep counting are inactive.
+# pose_engine.py and exercises.py live in BackEnd/api. If anything goes wrong
+# (missing model, incompatible platform, etc.) we fall back to demo mode so the
+# server still starts instead of crashing on import.
 try:
-    from pose_engine import PoseEngine
-    from exercises import ExerciseTracker
+    from BackEnd.api.pose_engine import PoseEngine
+    from BackEnd.api.exercises import ExerciseTracker
     TRACKING_AVAILABLE = True
     print("[FormAI] Tracking modules loaded OK")
-except ImportError:
+except Exception as exc:
     TRACKING_AVAILABLE = False
-    print("[FormAI] pose_engine / exercises not found — running in demo mode")
+    print(f"[FormAI] Tracking disabled ({exc}); running in demo mode")
 
 
 # ── FLASK APP ────────────────────────────────────────────
