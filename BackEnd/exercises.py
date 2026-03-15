@@ -27,9 +27,9 @@ from pose_engine import PoseEngine, LM
 # Each exercise defines "down" and "up" angles.
 # Sensitivity shifts how strict the thresholds are.
 SENSITIVITY_OFFSET = {
-    "lenient": 10,   # angles are ±10° more forgiving
+    "lenient": 5,   # angles are ±10° more forgiving
     "normal":   0,
-    "strict":  -10,  # angles are ±10° more demanding
+    "strict":  -50,  # angles are ±10° more demanding
 }
 
 

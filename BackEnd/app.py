@@ -67,10 +67,10 @@ except ImportError:
 # ── FLASK APP ────────────────────────────────────────────
 app = Flask(
     __name__,
-    template_folder=str(TEMPLATES_DIR),  # render_template looks here
-    static_folder=str(SCRIPT_DIR),       # url_for('static') resolves here
-    static_url_path="/script",           # served at  /script/app.js
+    template_folder=str(TEMPLATES_DIR),
+    static_folder=None,
 )
+
 app.config["SECRET_KEY"] = "formai-secret-change-in-production"
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
@@ -84,7 +84,7 @@ class AppState:
         self.lock             = threading.Lock()
         self.is_tracking      = False
         self.current_exercise = "squat"
-        self.sensitivity      = "normal"   # lenient | normal | strict
+        self.sensitivity      = "strict"   # lenient | normal | strict
         self.cap              = None       # cv2.VideoCapture instance
         self.latest_frame     = None       # most recent JPEG bytes
         self.frame_event      = threading.Event()
@@ -250,12 +250,28 @@ def index():
     """Serve FrontEnd/HTML/index.html."""
     return render_template("index.html")
 
-
 @app.route("/styles/<path:filename>")
 def serve_styles(filename):
     """Serve CSS files from FrontEnd/Styles/."""
     return send_from_directory(str(STYLES_DIR), filename)
 
+@app.route('/favicon.ico')
+def favicon():
+    import os
+    return send_from_directory(
+        os.path.join(app.root_path),
+        'favicon.ico',
+        mimetype='image/x-icon'
+    )
+
+@app.route("/script/<path:filename>")
+def serve_script(filename):
+    return send_from_directory(str(SCRIPT_DIR), filename)
+
+@app.route("/images/<path:filename>")
+def serve_images(filename):
+    images_dir = FRONTEND_DIR / "Images"
+    return send_from_directory(str(images_dir), filename)
 
 @app.route("/video_feed")
 def video_feed():
@@ -429,7 +445,51 @@ def on_update_settings(data):
         g.sensitivity = sensitivity
     print(f"[FormAI] Sensitivity → {sensitivity}")
     emit("settings_updated", {"sensitivity": sensitivity})
+<<<<<<< HEAD
     
+=======
+ #Schedule event 
+SCHEDULE_FILE = BACKEND_DIR / "schedule.json"
+
+def load_schedule():
+    if SCHEDULE_FILE.exists():
+        return json.loads(SCHEDULE_FILE.read_text())
+    return {day: [] for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}
+
+def save_schedule(data):
+    SCHEDULE_FILE.write_text(json.dumps(data, indent=2))
+
+# --- New Routes ---
+
+@app.route("/api/schedule", methods=["GET"])
+def get_schedule():
+    return jsonify(load_schedule())
+
+@app.route("/api/schedule", methods=["POST"])
+def update_schedule():
+    """Body: { "day": "Monday", "exercises": ["squat", "pushup"] }"""
+    data = request.get_json()
+    day = data.get("day")
+    exercises = data.get("exercises", [])
+    
+    full_schedule = load_schedule()
+    if day in full_schedule:
+        full_schedule[day] = exercises
+        save_schedule(full_schedule)
+        return jsonify({"status": "success"})
+    return jsonify({"status": "error", "message": "Invalid day"}), 400
+
+@app.route("/api/schedule/today")
+def get_today_schedule():
+    import datetime
+    day_name = datetime.datetime.now().strftime("%A")
+    full_schedule = load_schedule() # Uses your load_schedule function
+    return jsonify({
+        "day": day_name, 
+        "exercises": full_schedule.get(day_name, [])
+    })
+
+>>>>>>> 7b071c4ee9fcd30b6e6e213b9e015a0ffdc31bcd
 # ── ENTRY POINT ───────────────────────────────────────────
 if __name__ == "__main__": 
     print("=" * 52)
