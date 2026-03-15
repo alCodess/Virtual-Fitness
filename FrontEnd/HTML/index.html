@@ -1,48 +1,210 @@
 <!DOCTYPE html>
+<!--
+  ═══════════════════════════════════════════════════════════
+  FormAI — Virtual Fitness Trainer
+  FrontEnd/HTML/index.html
+
+  HOW THIS FILE IS ORGANISED:
+  ─────────────────────────────────
+  1.  <head>            — fonts, CSS link
+  2.  Auth modal        — login / register overlay (shown on first visit)
+  3.  App shell         — the main .app grid container
+  4.  Topbar            — logo, tab nav, streak badge, level badge, user avatar
+  5.  Trainer tab       — left panel, center camera, right panel
+      └ Left panel      — exercise selector, session stats, set target, week chart
+      └ Center panel    — camera area with HUD, control bar
+      └ Right panel     — form score ring, coach feedback, daily challenge
+  6.  History tab       — session history cards list
+  7.  Profile tab       — user hero, all-time stats, badges, charts, breakdown
+  8.  Settings modal    — voice, angles, beep, resolution, sensitivity
+  9.  Summary modal     — session complete popup
+  10. <script> tags     — SocketIO CDN, then app.js
+  ═══════════════════════════════════════════════════════════
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FormAI — Virtual Fitness Trainer</title>
+
+  <!-- Google Fonts — Bebas Neue (display/headings) + DM Sans (body text) -->
+  <!-- ❌ TO REMOVE GOOGLE FONTS: delete the three lines below and update
+       --font-display and --font-body in main.css to use system fonts. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Main stylesheet — served by Flask from FrontEnd/Styles/main.css -->
   <link rel="stylesheet" href="/styles/main.css" />
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════════════════
+     2. AUTH MODAL
+     ─────────────────────────────────────────────────────
+     Shown on top of everything when no user is logged in.
+     The .open class is added/removed by showAuthTab() in app.js.
+     The app behind it is hidden until login succeeds.
+
+     ✅ TO ADD A NEW FIELD (e.g. email):
+       Copy a .auth-field block and give its <input> a new id.
+       Then read it in the register() function in app.js.
+
+     ❌ TO REMOVE THE AUTH SYSTEM ENTIRELY:
+       Delete this entire block and remove the .open class from
+       the auth-overlay. Then remove section 5 from app.js.
+══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay open" id="auth-overlay">
+  <div class="modal auth-modal">
+
+    <!-- Logo inside the modal -->
+    <div class="auth-logo">FORM<span>AI</span></div>
+    <p class="auth-sub">Your AI-powered fitness trainer</p>
+
+    <!-- Tab switcher: Sign In / Create Account -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="login-tab-btn"    onclick="showAuthTab('login')">Sign In</button>
+      <button class="auth-tab"        id="register-tab-btn" onclick="showAuthTab('register')">Create Account</button>
+    </div>
+
+    <!-- ── LOGIN FORM ─────────────────────────────────── -->
+    <div id="auth-login">
+      <div class="auth-field">
+        <label class="auth-label">Username</label>
+        <input type="text"     id="login-username" class="auth-input" placeholder="Enter your username" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <input type="password" id="login-password" class="auth-input" placeholder="Enter your password" />
+      </div>
+      <!-- Error message — populated by login() in app.js -->
+      <div class="auth-error" id="login-error"></div>
+      <!-- login() is defined in app.js section 5 -->
+      <button class="ctrl-btn primary" style="width:100%;margin-top:8px;" onclick="login()">Sign In</button>
+    </div>
+
+    <!-- ── REGISTER FORM ──────────────────────────────── -->
+    <!-- Hidden by default — showAuthTab('register') reveals it -->
+    <div id="auth-register" style="display:none;">
+      <div class="auth-field">
+        <label class="auth-label">Username</label>
+        <input type="text"     id="reg-username"    class="auth-input" placeholder="Choose a username" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Display name</label>
+        <!-- Optional — falls back to username if blank -->
+        <input type="text"     id="reg-displayname" class="auth-input" placeholder="Your name (optional)" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <input type="password" id="reg-password"    class="auth-input" placeholder="Choose a password" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">Confirm password</label>
+        <input type="password" id="reg-confirm"     class="auth-input" placeholder="Repeat password" />
+      </div>
+      <div class="auth-error" id="reg-error"></div>
+      <!-- register() is defined in app.js section 5 -->
+      <button class="ctrl-btn primary" style="width:100%;margin-top:8px;" onclick="register()">Create Account</button>
+    </div>
+
+  </div>
+</div><!-- /auth-overlay -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     3. APP SHELL
+     ─────────────────────────────────────────────────────
+     The main container. CSS grid: 56px topbar + 1fr content.
+     Hidden behind the auth modal until the user logs in.
+══════════════════════════════════════════════════════════ -->
 <div class="app" id="app">
 
-  <!-- ── TOPBAR ─────────────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════
+       4. TOPBAR
+       ────────────────────────────────────────────────
+       Always visible. Contains: logo, tab nav, status badges, user avatar.
+
+       ✅ TO ADD A NEW TAB:
+         1. Add a <button class="tab-btn"> here.
+         2. Add a matching <main class="tab-content" id="tab-yourtab"> below.
+         3. Add a case for it in switchTab() in app.js.
+
+       ❌ TO REMOVE THE STREAK BADGE: delete the .streak-badge div.
+       ❌ TO REMOVE THE LEVEL BADGE:  delete the .level-badge div.
+  ══════════════════════════════════════════════════════ -->
   <header class="topbar">
+
+    <!-- Brand logo — FORM in accent green, AI in white -->
     <div class="logo">FORM<span>AI</span></div>
 
+    <!-- Tab navigation buttons -->
     <nav class="topbar-center">
+      <!-- data-tab must match the id of the corresponding tab-content minus "tab-" -->
       <button class="tab-btn active" data-tab="trainer" onclick="switchTab('trainer', this)">Trainer</button>
+<<<<<<< HEAD
       <button class="tab-btn" data-tab="history" onclick="switchTab('history', this)">History</button>
       <button class="tab-btn" data-tab="progress" onclick="switchTab('progress', this)">Progress</button>
+=======
+      <button class="tab-btn"        data-tab="history" onclick="switchTab('history', this)">History</button>
+      <button class="tab-btn"        data-tab="profile" onclick="switchTab('profile', this)">Profile</button>
+>>>>>>> 62841aaaf8d76295cd4da8754911fda280c8f051
     </nav>
 
+    <!-- Right side: streak, level, user avatar -->
     <div class="topbar-right">
+
+      <!-- Streak badge — updated by updateStreak() and loadStreak() in app.js -->
       <div class="streak-badge" id="streak-badge">🔥 <span id="streak-count">0</span> day streak</div>
+
+      <!-- Level badge — updated by updateLevel() in app.js -->
       <div class="level-badge">
         <div class="level-dot"></div>
         Level <span id="user-level">1</span> · <span id="user-title">Beginner</span>
       </div>
-      <button class="settings-btn" onclick="toggleSettings()" title="Settings">⚙</button>
+
+      <!-- User avatar circle — shows initials, opens dropdown on click -->
+      <!-- Initials are set by initUserUI() in app.js -->
+      <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu()">
+        <span id="user-initials">?</span>
+      </div>
+
+      <!-- Dropdown menu under the avatar -->
+      <div class="user-menu" id="user-menu">
+        <!-- Display name shown at the top of the dropdown -->
+        <div class="user-menu-name" id="user-menu-name">—</div>
+        <!-- ✅ TO ADD MORE MENU ITEMS: copy a .user-menu-item button and give it an onclick -->
+        <button class="user-menu-item"        onclick="toggleSettings()">⚙ Settings</button>
+        <button class="user-menu-item danger"  onclick="logout()">⎋ Sign out</button>
+      </div>
+
     </div>
   </header>
 
+
   <!-- ══════════════════════════════════════════════════
-       TAB: TRAINER
-  ══════════════════════════════════════════════════ -->
+       5. TRAINER TAB
+       ────────────────────────────────────────────────
+       The main workout screen. 3-column grid:
+       left panel | camera + controls | right panel
+  ══════════════════════════════════════════════════════ -->
   <main class="tab-content active" id="tab-trainer">
     <div class="main-layout">
 
-      <!-- ── LEFT PANEL ───────────────────────────── -->
+
+      <!-- ── LEFT PANEL ─────────────────────────────── -->
       <aside class="left-panel">
 
-        <!-- Exercise selector -->
+        <!-- Exercise selector
+             Each button has data-ex matching a key in the EXERCISES object in app.js.
+             onclick calls setExercise(key, this) which switches the active exercise.
+
+             ✅ TO ADD AN EXERCISE:
+               1. Copy one of these buttons, change data-ex and the display text.
+               2. Add the matching entry to EXERCISES in app.js.
+               3. Add the analysis logic in BackEnd/exercises.py.
+
+             ❌ TO REMOVE AN EXERCISE: delete the button and remove from app.js. -->
         <div class="panel-section">
           <p class="panel-label">Exercise</p>
 
@@ -90,9 +252,12 @@
             </div>
             <div class="ex-check" id="ex-check-jumping_jack"></div>
           </button>
-        </div>
+        </div><!-- /exercise selector -->
 
-        <!-- Session stats -->
+
+        <!-- Session stats — 4 stat boxes updated by updateStats() in app.js
+             ✅ TO ADD A STAT: copy a .mini-stat div, give it a unique id,
+                and set its textContent in updateStats() in app.js. -->
         <div class="panel-section">
           <p class="panel-label">Session stats</p>
           <div class="mini-stats">
@@ -113,86 +278,102 @@
               <div class="mini-stat-label">Avg accuracy</div>
             </div>
           </div>
-        </div>
+        </div><!-- /session stats -->
 
-        <!-- Badges -->
-        <div class="panel-section">
-          <p class="panel-label">Badges</p>
-          <div class="badges-grid" id="badges-grid">
-            <div class="badge earned" title="Complete your first set">⚡ First Set</div>
-            <div class="badge" title="10 reps in a row with good form">🎯 10-Streak</div>
-            <div class="badge" title="25 perfect reps">🏅 25 Perfect</div>
-            <div class="badge" title="50 total reps in one session">🔥 50 Reps</div>
-            <div class="badge" title="Complete a 7-day streak">📅 7-Day</div>
-            <div class="badge" title="Reach 90%+ form score">💎 Elite Form</div>
-          </div>
-        </div>
 
-        <!-- Target sets -->
+        <!-- Set target — + and − adjust state.targetSets in app.js.
+             adjustTarget() is defined in app.js section 11. -->
         <div class="panel-section">
           <p class="panel-label">Set target</p>
           <div class="set-target-row">
             <button class="target-btn" onclick="adjustTarget(-1)">−</button>
             <span id="target-display">3 sets × 10 reps</span>
-            <button class="target-btn" onclick="adjustTarget(1)">+</button>
+            <button class="target-btn" onclick="adjustTarget(+1)">+</button>
           </div>
         </div>
 
-      </aside>
 
-      <!-- ── CENTER PANEL ──────────────────────────── -->
+        <!-- This-week bar chart — rendered by renderWeekChart() in app.js.
+             Updated after login and after each session ends.
+             ❌ TO REMOVE: delete this panel-section and renderWeekChart() in app.js. -->
+        <div class="panel-section">
+          <p class="panel-label">This week</p>
+          <div class="week-chart" id="week-chart">
+            <!-- Bars are injected here by renderWeekChart() -->
+          </div>
+        </div>
+
+      </aside><!-- /left-panel -->
+
+
+      <!-- ── CENTER PANEL ────────────────────────────── -->
       <section class="center-panel">
 
+        <!-- Camera area — contains the live video feed and all HUD overlays.
+             Most HUD children start hidden (style="display:none") and are
+             shown by startSession() in app.js once a session begins. -->
         <div class="camera-area" id="camera-area">
 
-          <!-- Waiting state (shown before camera starts) -->
+          <!-- Waiting placeholder — shown when no session is active.
+               Hidden by startSession() when camera feed starts.
+               ✅ TO CHANGE PLACEHOLDER TEXT: edit the h2 and p below. -->
           <div class="camera-waiting" id="camera-waiting">
             <div class="waiting-icon">📷</div>
             <h2 class="waiting-title">Camera not active</h2>
-            <p class="waiting-desc">Press <strong>Start</strong> to activate your webcam and begin tracking</p>
+            <p class="waiting-desc">Press <strong>Start Session</strong> to activate your webcam and begin tracking</p>
           </div>
 
-          <!-- Live video feed from backend -->
-          <img class="camera-feed" id="camera-feed"
-               src=""
-               alt="Camera feed"
-               style="display:none;" />
+          <!-- Live MJPEG stream from the backend — src is set by startSession().
+               Flask serves this from the /video_feed route in BackEnd/app.py.
+               Hidden until startSession() makes it visible. -->
+          <img class="camera-feed" id="camera-feed" src="" alt="Camera feed" style="display:none;" />
 
-          <!-- Corner frame decorations -->
+          <!-- Corner frame decorations (CSS-only, purely decorative) -->
           <div class="corner-frame corner-tl"></div>
           <div class="corner-frame corner-tr"></div>
           <div class="corner-frame corner-bl"></div>
           <div class="corner-frame corner-br"></div>
 
-          <!-- LIVE indicator -->
+          <!-- LIVE badge — shown while session is running.
+               Has a pulsing red dot animation (defined in main.css). -->
           <div class="live-indicator" id="live-indicator" style="display:none;">
-            <div class="live-dot"></div>
-            LIVE
+            <div class="live-dot"></div>LIVE
           </div>
 
-          <!-- Rep counter HUD -->
+          <!-- Rep counter HUD — large number in top centre of camera.
+               Updated by onRepCompleted() → numEl.textContent = state.reps.
+               Flash animation class added/removed on each rep. -->
           <div class="hud-reps" id="hud-reps">
             <span class="hud-rep-num" id="hud-rep-num">0</span>
             <span class="hud-rep-label">REPS</span>
           </div>
 
-          <!-- Phase label -->
-          <div class="hud-phase" id="hud-phase">Ready — stand in frame</div>
+          <!-- Phase label — e.g. "Lower down", "Drive up", "Set 1 complete!"
+               Updated by handleRepData() and onRepCompleted() in app.js.
+               Hidden until session starts. -->
+          <div class="hud-phase" id="hud-phase" style="display:none;">Ready — stand in frame</div>
 
-          <!-- Form feedback -->
-          <div class="hud-feedback" id="hud-feedback">Waiting for pose detection…</div>
+          <!-- Feedback overlay text — e.g. "✓ Good rep" or "⚠ Go deeper"
+               Updated by setFeedback() in app.js.
+               Hidden until session starts. -->
+          <div class="hud-feedback" id="hud-feedback" style="display:none;">Waiting for pose detection…</div>
 
-          <!-- Joint angle overlays -->
-          <div class="angle-pill angle-left" id="angle-left">
+          <!-- Angle pills — left and right sides of the camera.
+               Values set by handleRepData() in app.js.
+               Labels set by setExercise() in app.js.
+               Hidden until session starts (also controllable via settings). -->
+          <div class="angle-pill angle-left" id="angle-left" style="display:none;">
             <div class="angle-val" id="angle-val-left">—</div>
             <div class="angle-lbl" id="angle-lbl-left">Knee angle</div>
           </div>
-          <div class="angle-pill angle-right" id="angle-right">
+          <div class="angle-pill angle-right" id="angle-right" style="display:none;">
             <div class="angle-val" id="angle-val-right">—</div>
             <div class="angle-lbl" id="angle-lbl-right">Hip angle</div>
           </div>
 
-          <!-- Pose confidence bar -->
+          <!-- Pose confidence bar — bottom left of camera.
+               Width set by handleRepData() in app.js.
+               Hidden until first confidence data arrives from backend. -->
           <div class="confidence-bar-wrap" id="confidence-wrap" style="display:none;">
             <div class="confidence-label">Pose confidence</div>
             <div class="confidence-track">
@@ -202,74 +383,111 @@
 
         </div><!-- /camera-area -->
 
-        <!-- CONTROL BAR -->
-        <div class="control-bar">
-          <button class="ctrl-btn primary" id="start-btn" onclick="toggleWorkout()">
-            <span id="start-btn-label">▶ Start</span>
-          </button>
-          <button class="ctrl-btn" onclick="resetCurrentSet()">↺ Reset set</button>
-          <button class="ctrl-btn" id="voice-btn" onclick="toggleVoice()">🔇 Voice off</button>
-          <button class="ctrl-btn danger" onclick="endSession()">■ End session</button>
 
+        <!-- CONTROL BAR
+             Single Start/Stop Session button + Reset Set + Voice toggle + Timer.
+
+             The session button toggles between green Start and red Stop.
+             toggleSession() → startSession() or endSession() in app.js.
+
+             ✅ TO ADD A NEW BUTTON: copy a .ctrl-btn and add an onclick.
+             ❌ TO REMOVE THE RESET SET BUTTON: delete the second button below.
+             ❌ TO REMOVE THE VOICE BUTTON: delete the third button and
+                toggleVoice() in app.js. -->
+        <div class="control-bar">
+
+          <!-- Main session toggle — green/primary at start, red/danger when running.
+               CSS classes swapped by startSession() and endSession() in app.js. -->
+          <button class="ctrl-btn primary" id="session-btn" onclick="toggleSession()">
+            <span id="session-btn-label">▶ Start Session</span>
+          </button>
+
+          <!-- Reset the current set rep counter without ending the session -->
+          <button class="ctrl-btn" onclick="resetCurrentSet()">↺ Reset set</button>
+
+          <!-- Voice coaching toggle — speaks rep numbers aloud via browser TTS -->
+          <button class="ctrl-btn" id="voice-btn" onclick="toggleVoice()">🔇 Voice off</button>
+
+          <!-- Spacer pushes the timer to the right -->
           <div class="ctrl-divider"></div>
 
+          <!-- Session timer — updated every second by startTimer() in app.js.
+               Turns green (.running class) when a session is active. -->
           <div class="timer-block">
             <div class="timer-label">Session time</div>
             <div class="timer-display" id="timer-display">00:00</div>
           </div>
-        </div>
 
-      </section>
+        </div><!-- /control-bar -->
 
-      <!-- ── RIGHT PANEL ───────────────────────────── -->
+      </section><!-- /center-panel -->
+
+
+      <!-- ── RIGHT PANEL ─────────────────────────────── -->
       <aside class="right-panel">
 
-        <!-- Form score ring -->
+        <!-- Form score ring
+             Hidden until a session starts (score-idle-msg shown instead).
+             The SVG ring fill is animated by updateFormScore() in app.js.
+
+             ❌ TO REMOVE: delete this .panel-section and updateFormScore() in app.js. -->
         <div class="panel-section form-score-section">
           <p class="panel-label">Form score</p>
-          <div class="score-ring-container">
-            <svg class="score-ring-svg" viewBox="0 0 120 120" width="120" height="120">
-              <circle class="score-track" cx="60" cy="60" r="50"/>
-              <circle class="score-fill" id="score-ring-fill" cx="60" cy="60" r="50"
-                stroke-dasharray="314"
-                stroke-dashoffset="63"
-                transform="rotate(-90 60 60)"/>
-            </svg>
-            <div class="score-overlay">
-              <div class="score-num" id="score-num">80</div>
-              <div class="score-sub">/ 100</div>
-            </div>
-          </div>
-          <div class="score-grade" id="score-grade">Good</div>
-        </div>
 
-        <!-- Realtime coach feedback -->
+          <!-- Idle state message — shown when no session is running -->
+          <div class="score-idle-msg" id="score-idle-msg">Start a session to see your form score</div>
+
+          <!-- Live ring — hidden until session starts -->
+          <div class="score-ring-wrap" id="score-ring-wrap" style="display:none;">
+            <div class="score-ring-container">
+              <svg class="score-ring-svg" viewBox="0 0 120 120" width="120" height="120">
+                <!-- Grey background track -->
+                <circle class="score-track" cx="60" cy="60" r="50"/>
+                <!-- Coloured fill — stroke-dashoffset controlled by updateFormScore() -->
+                <circle class="score-fill" id="score-ring-fill" cx="60" cy="60" r="50"
+                  stroke-dasharray="314"
+                  stroke-dashoffset="314"
+                  transform="rotate(-90 60 60)"/>
+              </svg>
+              <div class="score-overlay">
+                <div class="score-num" id="score-num">0</div>
+                <div class="score-sub">/ 100</div>
+              </div>
+            </div>
+            <!-- Grade text e.g. "Good", "Excellent" — set by updateFormScore() -->
+            <div class="score-grade" id="score-grade">—</div>
+          </div>
+        </div><!-- /form score -->
+
+
+        <!-- Realtime coach feedback list
+             Idle message shown when no session is active.
+             During a session, live feedback items are injected by pushFeedbackItem().
+             Items deduplicate consecutive identical messages with an "xN" counter. -->
         <div class="panel-section feedback-section">
           <p class="panel-label">Coach feedback</p>
-          <div class="feedback-list" id="feedback-list">
-            <div class="feedback-item">
-              <div class="fi-dot good"></div>
-              <div class="fi-text"><strong>Waiting for movement</strong> — start your first rep</div>
-            </div>
-          </div>
-        </div>
 
-        <!-- This-week mini chart -->
-        <div class="panel-section">
-          <p class="panel-label">This week</p>
-          <div class="week-chart" id="week-chart">
-            <!-- Populated by JS -->
+          <!-- Idle state — shown when session is not running -->
+          <div class="feedback-idle-msg" id="feedback-idle-msg" style="display:flex;">
+            <div class="fi-dot good" style="flex-shrink:0;margin-top:5px;"></div>
+            <span>Start a session to receive live coaching feedback</span>
           </div>
-        </div>
 
-        <!-- Daily challenge -->
+          <!-- Live feedback list — hidden until session starts.
+               Items added/removed by pushFeedbackItem() in app.js.
+               Max 5 items at once — oldest dropped when full. -->
+          <div class="feedback-list" id="feedback-list" style="display:none;"></div>
+        </div><!-- /coach feedback -->
+
+
+        <!-- Daily challenge — progress bar showing reps vs goal.
+             Goal and description come from the EXERCISES config in app.js.
+             Updated by updateChallenge() in app.js. -->
         <div class="panel-section">
           <p class="panel-label">Daily challenge</p>
           <div class="challenge-card">
             <div class="challenge-name" id="challenge-name">Squat Burn</div>
-            <div class="challenge-desc" id="challenge-desc">
-              Complete 50 squats with 80%+ form score.
-            </div>
+            <div class="challenge-desc" id="challenge-desc">Complete 50 squats with 80%+ form score.</div>
             <div class="challenge-progress-track">
               <div class="challenge-progress-fill" id="challenge-fill" style="width:0%"></div>
             </div>
@@ -278,16 +496,26 @@
               <span id="challenge-pct">0%</span>
             </div>
           </div>
-        </div>
+        </div><!-- /daily challenge -->
 
-      </aside>
+      </aside><!-- /right-panel -->
 
     </div><!-- /main-layout -->
-  </main>
+  </main><!-- /tab-trainer -->
+
 
   <!-- ══════════════════════════════════════════════════
-       TAB: HISTORY
-  ══════════════════════════════════════════════════ -->
+       6. HISTORY TAB
+       ────────────────────────────────────────────────
+       Session history list — cards rendered by renderHistory() in app.js.
+       Rendered lazily each time the tab is opened.
+
+       ✅ TO ADD MORE FIELDS TO EACH CARD:
+         Edit the template literal inside renderHistory() in app.js.
+
+       ❌ TO REMOVE THIS TAB: delete this <main> block and remove
+         the "History" tab button from the topbar above.
+  ══════════════════════════════════════════════════════ -->
   <main class="tab-content" id="tab-history">
     <div class="history-page">
       <div class="history-header">
@@ -295,37 +523,56 @@
         <p class="page-sub">Your last 30 sessions</p>
       </div>
 
+      <!-- History card list — injected by renderHistory() in app.js.
+           The #history-empty div is shown/hidden by renderHistory(). -->
       <div class="history-list" id="history-list">
-        <!-- Populated by JS from localStorage -->
         <div class="history-empty" id="history-empty">
           No sessions recorded yet. Complete your first workout to see it here!
         </div>
       </div>
     </div>
-  </main>
+  </main><!-- /tab-history -->
+
 
   <!-- ══════════════════════════════════════════════════
-       TAB: PROGRESS
-  ══════════════════════════════════════════════════ -->
-  <main class="tab-content" id="tab-progress">
-    <div class="progress-page">
-      <div class="progress-header">
-        <h1 class="page-title">Progress Analytics</h1>
-        <p class="page-sub">Track your improvement over time</p>
+       7. PROFILE TAB
+       ────────────────────────────────────────────────
+       User profile, all-time stats, badges, progress charts,
+       and exercise breakdown. Rendered by renderProfile() in app.js.
+
+       ✅ TO ADD A NEW ALL-TIME STAT:
+         1. Copy an .alltime-stat div and give it a unique id.
+         2. Set its textContent in renderProfile() in app.js.
+
+       ✅ TO ADD A NEW CHART:
+         1. Add a <div class="progress-card"> with a <canvas> inside.
+         2. Call drawLineChart('your-canvas-id', data, labels, color)
+            inside renderProfile() in app.js.
+  ══════════════════════════════════════════════════════ -->
+  <main class="tab-content" id="tab-profile">
+    <div class="profile-page">
+
+      <!-- Profile hero — avatar, name, username, level, streak.
+           Populated by initUserUI() in app.js. -->
+      <div class="profile-hero">
+        <!-- Large avatar circle — initials set by initUserUI() -->
+        <div class="profile-avatar-lg" id="profile-avatar-lg">?</div>
+        <div class="profile-info">
+          <div class="profile-name"     id="profile-name">—</div>
+          <div class="profile-username" id="profile-username">@—</div>
+          <div class="profile-level-row">
+            <div class="level-dot"></div>
+            <span>Level <strong id="profile-level">1</strong> · <span id="profile-title">Beginner</span></span>
+            <span class="profile-streak">🔥 <span id="profile-streak">0</span> day streak</span>
+          </div>
+        </div>
       </div>
 
-      <div class="progress-grid">
+      <!-- Profile grid — 2-column layout for stat cards -->
+      <div class="profile-grid">
 
-        <div class="progress-card">
-          <div class="progress-card-title">Reps per Session</div>
-          <canvas id="chart-reps" width="400" height="200"></canvas>
-        </div>
-
-        <div class="progress-card">
-          <div class="progress-card-title">Form Accuracy %</div>
-          <canvas id="chart-form" width="400" height="200"></canvas>
-        </div>
-
+        <!-- All-time stats — spans full width (grid-column: span 2 in CSS).
+             Values populated by renderProfile() in app.js. -->
         <div class="progress-card stat-summary">
           <div class="progress-card-title">All-time Stats</div>
           <div class="alltime-grid">
@@ -346,22 +593,67 @@
               <div class="alltime-lbl">Total time</div>
             </div>
           </div>
-        </div>
+        </div><!-- /all-time stats -->
 
-        <div class="progress-card">
-          <div class="progress-card-title">Exercise Breakdown</div>
-          <div class="ex-breakdown" id="ex-breakdown">
-            <!-- Populated by JS -->
+        <!-- Badges grid — rendered by renderProfileBadges() in app.js.
+             ✅ TO ADD A BADGE: add to BADGE_DEFS in app.js. No HTML needed.
+             ❌ TO REMOVE BADGES: delete this card and renderProfileBadges() in app.js. -->
+        <div class="progress-card badges-card">
+          <div class="progress-card-title">Badges</div>
+          <div class="badges-grid" id="profile-badges-grid">
+            <!-- Injected by renderProfileBadges() in app.js -->
           </div>
         </div>
 
-      </div>
-    </div>
-  </main>
+        <!-- Reps per session line chart.
+             Canvas drawn by drawLineChart() called from renderProfile(). -->
+        <div class="progress-card">
+          <div class="progress-card-title">Reps per Session</div>
+          <canvas id="chart-reps" width="400" height="200"></canvas>
+        </div>
 
+<<<<<<< HEAD
+=======
+        <!-- Form accuracy line chart -->
+        <div class="progress-card">
+          <div class="progress-card-title">Form Accuracy %</div>
+          <canvas id="chart-form" width="400" height="200"></canvas>
+        </div>
+
+        <!-- Exercise breakdown — horizontal proportion bars.
+             Rendered by renderProfile() in app.js.
+             ❌ TO REMOVE: delete this card and the breakdown section in renderProfile(). -->
+        <div class="progress-card">
+          <div class="progress-card-title">Exercise Breakdown</div>
+          <div class="ex-breakdown" id="ex-breakdown">
+            <!-- Injected by renderProfile() in app.js -->
+          </div>
+        </div>
+
+      </div><!-- /profile-grid -->
+    </div><!-- /profile-page -->
+  </main><!-- /tab-profile -->
+
+>>>>>>> 62841aaaf8d76295cd4da8754911fda280c8f051
 </div><!-- /app -->
 
-<!-- ── SETTINGS MODAL ───────────────────────────────── -->
+
+<!-- ══════════════════════════════════════════════════════
+     8. SETTINGS MODAL
+     ─────────────────────────────────────────────────────
+     Opened by toggleSettings() in app.js (called from user menu).
+     Each setting uses either a .toggle (checkbox) or a <select>.
+     Values are read and saved by saveSettings() in app.js.
+     Values are pre-filled when opening by loadSettingsUI() in app.js.
+
+     ✅ TO ADD A NEW SETTING:
+       1. Copy a .setting-row block below.
+       2. Give the input element a unique id.
+       3. Read it in saveSettings() in app.js.
+       4. Add the field to state.settings in app.js.
+
+     ❌ TO REMOVE A SETTING: delete its .setting-row.
+══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="settings-overlay" onclick="closeSettings(event)">
   <div class="modal" id="settings-modal">
     <div class="modal-header">
@@ -370,6 +662,8 @@
     </div>
 
     <div class="modal-body">
+
+      <!-- Toggle: voice coaching (reads/writes via setting-voice checkbox) -->
       <div class="setting-row">
         <label class="setting-label">Voice coaching</label>
         <label class="toggle">
@@ -378,6 +672,7 @@
         </label>
       </div>
 
+      <!-- Toggle: show angle overlay pills on the camera view -->
       <div class="setting-row">
         <label class="setting-label">Show angle overlays</label>
         <label class="toggle">
@@ -386,6 +681,7 @@
         </label>
       </div>
 
+      <!-- Toggle: play a beep sound on each rep -->
       <div class="setting-row">
         <label class="setting-label">Rep beep sound</label>
         <label class="toggle">
@@ -394,6 +690,8 @@
         </label>
       </div>
 
+      <!-- Select: camera resolution hint sent to the backend.
+           The actual resolution is set in BackEnd/app.py on the VideoCapture object. -->
       <div class="setting-row">
         <label class="setting-label">Camera resolution</label>
         <select id="setting-resolution" onchange="updateSettings()">
@@ -403,6 +701,9 @@
         </select>
       </div>
 
+      <!-- Select: form strictness.
+           Sent to backend via socket 'update_settings' event.
+           Affects SENSITIVITY_OFFSET in BackEnd/exercises.py. -->
       <div class="setting-row">
         <label class="setting-label">Form sensitivity</label>
         <select id="setting-sensitivity" onchange="updateSettings()">
@@ -412,18 +713,28 @@
         </select>
       </div>
 
-      <div class="setting-row">
-        <label class="setting-label">Username</label>
-        <input type="text" id="setting-username" placeholder="Enter your name" class="setting-input" />
-      </div>
-
+      <!-- Save button — calls saveSettings() which writes to localStorage -->
       <button class="ctrl-btn primary" onclick="saveSettings()" style="width:100%;margin-top:16px;">Save settings</button>
+
+      <!-- Danger button — clears all workout data for the current user.
+           ❌ TO REMOVE: delete this button and clearAllData() in app.js. -->
       <button class="ctrl-btn danger" onclick="clearAllData()" style="width:100%;margin-top:8px;">Clear all data</button>
+
     </div>
   </div>
-</div>
+</div><!-- /settings-overlay -->
 
-<!-- ── SESSION SUMMARY MODAL ────────────────────────── -->
+
+<!-- ══════════════════════════════════════════════════════
+     9. SESSION SUMMARY MODAL
+     ─────────────────────────────────────────────────────
+     Shown automatically at the end of every session that had reps.
+     Opened by showSummary() in app.js, closed by closeSummary().
+     Values set from the just-saved session object.
+
+     ✅ TO ADD MORE STATS: copy a .summary-stat div and give it a new id.
+        Then set its textContent inside showSummary() in app.js.
+══════════════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="summary-overlay">
   <div class="modal" id="summary-modal">
     <div class="modal-header">
@@ -431,34 +742,41 @@
     </div>
     <div class="modal-body">
       <div class="summary-grid">
-        <div class="summary-stat">
-          <div class="summary-val" id="sum-reps">0</div>
-          <div class="summary-lbl">Total reps</div>
-        </div>
-        <div class="summary-stat">
-          <div class="summary-val" id="sum-cal">0</div>
-          <div class="summary-lbl">Calories</div>
-        </div>
-        <div class="summary-stat">
-          <div class="summary-val" id="sum-time">00:00</div>
-          <div class="summary-lbl">Duration</div>
-        </div>
-        <div class="summary-stat">
-          <div class="summary-val" id="sum-form">0%</div>
-          <div class="summary-lbl">Avg form</div>
-        </div>
+        <div class="summary-stat"><div class="summary-val" id="sum-reps">0</div><div class="summary-lbl">Total reps</div></div>
+        <div class="summary-stat"><div class="summary-val" id="sum-cal">0</div><div class="summary-lbl">Calories</div></div>
+        <div class="summary-stat"><div class="summary-val" id="sum-time">00:00</div><div class="summary-lbl">Duration</div></div>
+        <div class="summary-stat"><div class="summary-val" id="sum-form">0%</div><div class="summary-lbl">Avg form</div></div>
       </div>
 
+      <!-- Newly earned badges — injected by showSummary() in app.js.
+           Empty if no badges were earned this session. -->
       <div class="summary-badges" id="summary-badges"></div>
 
+      <!-- Close button — calls closeSummary() which removes .open from the overlay -->
       <button class="ctrl-btn primary" onclick="closeSummary()" style="width:100%;margin-top:20px;">Keep going 💪</button>
     </div>
   </div>
-</div>
+</div><!-- /summary-overlay -->
 
-<!-- ── SCRIPTS ───────────────────────────────────────── -->
-<!-- SocketIO client from CDN -->
+
+<!-- ══════════════════════════════════════════════════════
+     10. SCRIPTS
+     ─────────────────────────────────────────────────────
+     Scripts are at the bottom of <body> so the DOM is fully
+     loaded before JavaScript runs.
+
+     ❌ TO DISABLE WEBSOCKET (offline/demo mode):
+       Delete the socket.io <script> tag below.
+       The app will still work — app.js checks if 'io' is defined
+       and runs in demo mode if it's missing.
+══════════════════════════════════════════════════════════ -->
+
+<!-- SocketIO client library — served from CDN.
+     Must match the version used by Flask-SocketIO on the backend.
+     Current: 4.7.5 which matches flask-socketio 5.x. -->
 <script src="https://cdn.jsdelivr.net/npm/socket.io@4.7.5/client-dist/socket.io.min.js"></script>
+
+<!-- Main application script — served by Flask from FrontEnd/Script/app.js -->
 <script src="/script/app.js"></script>
 
 </body>

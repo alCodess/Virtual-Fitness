@@ -1,0 +1,9 @@
+{
+  "Monday": ["squat", "pushup", "plank"],
+  "Tuesday": ["lunges", "crunches", "jumping_jacks"],
+  "Wednesday": ["rest"],
+  "Thursday": ["squat", "pushup", "plank"],
+  "Friday": ["lunges", "crunches", "burpees"],
+  "Saturday": ["cardio"],
+  "Sunday": ["rest"]
+}
