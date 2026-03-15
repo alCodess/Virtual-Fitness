@@ -233,8 +233,10 @@ class ExerciseTracker:
             # Reached bottom position
             if self.phase == "up":
                 self.phase = "down"
-                self.form_issues = []
-
+                self.form_issues = [] # Start a timer
+# VALIDATION: 
+    # 1. Rep must be faster than 4 seconds (Sitting usually lasts longer)
+    # 2. Hip must have moved vertically (not just knees bending)
             # Check depth and lean
             if knee_angle > cfg["knee_down"] + 15 + offset:
                 issues.append("too_shallow")
