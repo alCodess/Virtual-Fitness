@@ -1,38 +1,68 @@
 /* ═══════════════════════════════════════════════════════════
    FormAI — Virtual Fitness Trainer
-   main.css
+   FrontEnd/Styles/main.css
    ═══════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
 
-/* ── CSS VARIABLES ─────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   1. CSS VARIABLES
+   ──────────────────────────────────────────────────────────
+   Edit these to retheme the entire app in one place.
+
+   ✅ TO CHANGE THE BRAND COLOUR: replace every #C8F135 value here.
+   ✅ TO CHANGE FONTS: update --font-display and --font-body, and
+      update the Google Fonts URL in index.html <head>.
+   ✅ TO ADJUST SPACING/RADIUS: edit --radius-sm, --radius, --radius-lg.
+══════════════════════════════════════════════════════════ */
 :root {
-  --accent:        #C8F135;
-  --accent-dim:    #a8d020;
-  --accent-glow:   rgba(200, 241, 53, 0.25);
-  --dark:          #0e0e0e;
-  --dark2:         #1a1a1a;
-  --dark3:         #252525;
-  --dark4:         #2f2f2f;
-  --dark5:         #3a3a3a;
-  --text:          #f0f0f0;
-  --text-muted:    #888888;
-  --text-dim:      #555555;
-  --red:           #ff4040;
-  --orange:        #ff8c00;
-  --green:         #c8f135;
-  --blue:          #3b9eff;
-  --border:        #2a2a2a;
-  --border-light:  #333333;
+  /* ── Brand colours ─────────────────────────────── */
+  --accent:        #C8F135;          /* lime green — primary brand colour */
+  --accent-dim:    #a8d020;          /* darker accent for hover states */
+  --accent-glow:   rgba(200, 241, 53, 0.25); /* glow used on rep counter shadow */
+
+  /* ── Background scale (dark → darker) ──────────── */
+  --dark:          #0e0e0e;          /* page background */
+  --dark2:         #1a1a1a;          /* panel/modal/topbar background */
+  --dark3:         #252525;          /* card/input background */
+  --dark4:         #2f2f2f;          /* hover states, icon backgrounds */
+  --dark5:         #3a3a3a;          /* scrollbar thumb, active borders */
+
+  /* ── Text ───────────────────────────────────────── */
+  --text:          #f0f0f0;          /* primary text */
+  --text-muted:    #888888;          /* secondary/descriptive text */
+  --text-dim:      #555555;          /* placeholder / label text */
+
+  /* ── Status colours ─────────────────────────────── */
+  --red:           #ff4040;          /* error / stop / bad form */
+  --orange:        #ff8c00;          /* warning / fair form */
+  --green:         #c8f135;          /* success / good form (same as accent) */
+  --blue:          #3b9eff;          /* form accuracy chart line */
+
+  /* ── Borders ────────────────────────────────────── */
+  --border:        #2a2a2a;          /* default border */
+  --border-light:  #333333;          /* lighter border for hover/active states */
+
+  /* ── Shape ──────────────────────────────────────── */
   --radius-sm:     6px;
   --radius:        12px;
   --radius-lg:     16px;
-  --font-display:  'Bebas Neue', sans-serif;
-  --font-body:     'DM Sans', sans-serif;
-  --transition:    0.15s ease;
+
+  /* ── Typography ─────────────────────────────────── */
+  --font-display:  'Bebas Neue', sans-serif;  /* used for large numbers, logo, titles */
+  --font-body:     'DM Sans', sans-serif;     /* used for all other text */
+
+  /* ── Animation ──────────────────────────────────── */
+  --transition:    0.15s ease;                /* default hover/focus transition */
 }
 
-/* ── RESET & BASE ──────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════
+   2. RESET & BASE
+   ──────────────────────────────────────────────────────────
+   Universal box-sizing reset, body defaults, scrollbar styling.
+   overflow:hidden on body prevents double scrollbars (the app
+   scrolls its own panels internally).
+══════════════════════════════════════════════════════════ */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
@@ -40,26 +70,40 @@ html, body {
   font-family: var(--font-body);
   background: var(--dark);
   color: var(--text);
-  overflow: hidden;
+  overflow: hidden; /* the app grid manages its own scrolling */
   -webkit-font-smoothing: antialiased;
 }
 
-button { cursor: pointer; font-family: var(--font-body); }
+button  { cursor: pointer; font-family: var(--font-body); }
 input, select, textarea { font-family: var(--font-body); }
 
-::-webkit-scrollbar { width: 4px; height: 4px; }
+/* Custom thin scrollbars ─ only visible on scrollable panels */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--dark5); border-radius: 2px; }
 
-/* ── APP SHELL ─────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════
+   3. APP SHELL
+   ──────────────────────────────────────────────────────────
+   The top-level grid that divides the page into a fixed 56px
+   topbar and the remaining 1fr content area.
+   height:100vh + overflow:hidden locks it to the viewport.
+══════════════════════════════════════════════════════════ */
 .app {
   display: grid;
-  grid-template-rows: 56px 1fr;
+  grid-template-rows: 56px 1fr; /* topbar height | content */
   height: 100vh;
   overflow: hidden;
 }
 
-/* ── TOPBAR ────────────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════
+   4. TOPBAR
+   ──────────────────────────────────────────────────────────
+   Fixed-height bar at the top. Flex row with three sections:
+   logo (left) | tab nav (centre) | user info (right).
+══════════════════════════════════════════════════════════ */
 .topbar {
   display: flex;
   align-items: center;
@@ -71,21 +115,19 @@ input, select, textarea { font-family: var(--font-body); }
   gap: 16px;
 }
 
+/* Logo — "FORM" in green, "AI" in white */
 .logo {
   font-family: var(--font-display);
   font-size: 26px;
   letter-spacing: 2px;
-  color: var(--accent);
+  color: var(--accent);          /* "FORM" part */
   white-space: nowrap;
   user-select: none;
 }
-.logo span { color: var(--text); }
+.logo span { color: var(--text); } /* "AI" part — white */
 
-/* Tab nav */
-.topbar-center {
-  display: flex;
-  gap: 4px;
-}
+/* Tab buttons row */
+.topbar-center { display: flex; gap: 4px; }
 
 .tab-btn {
   background: transparent;
@@ -97,23 +139,24 @@ input, select, textarea { font-family: var(--font-body); }
   border-radius: var(--radius-sm);
   transition: var(--transition);
 }
-.tab-btn:hover { background: var(--dark3); color: var(--text); }
+.tab-btn:hover  { background: var(--dark3); color: var(--text); }
+/* Active tab has a green label and dark pill background */
 .tab-btn.active { background: var(--dark3); color: var(--accent); }
 
-/* Right side */
+/* Right side container — flex row for streak, level, avatar */
 .topbar-right {
   display: flex;
   align-items: center;
   gap: 14px;
+  position: relative; /* so user-menu positions relative to this */
 }
 
-.streak-badge {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--orange);
-  white-space: nowrap;
-}
+/* Streak badge — "🔥 N day streak" in orange */
+/* ❌ TO REMOVE: delete this and the #streak-badge element in index.html */
+.streak-badge { font-size: 13px; font-weight: 500; color: var(--orange); white-space: nowrap; }
 
+/* Level badge pill — "Level N · Title" */
+/* ❌ TO REMOVE: delete this and the .level-badge element in index.html */
 .level-badge {
   display: flex;
   align-items: center;
@@ -125,51 +168,205 @@ input, select, textarea { font-family: var(--font-body); }
   font-size: 13px;
   white-space: nowrap;
 }
-.level-dot {
-  width: 8px; height: 8px;
+.level-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+/* User avatar — circular button showing initials, opens dropdown on click */
+.user-avatar span {
+  pointer-events: none;
+  width: 34px; height: 34px;
   border-radius: 50%;
   background: var(--accent);
-  flex-shrink: 0;
-}
-
-.settings-btn {
-  background: var(--dark3);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  width: 34px; height: 34px;
+  color: #000;
+  font-size: 13px;
+  font-weight: 800;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
   transition: var(--transition);
 }
-.settings-btn:hover { background: var(--dark4); color: var(--text); }
+.user-avatar:hover { background: var(--accent-dim); border-radius: 50%; }
 
-/* ── TAB CONTENT ───────────────────────────────────────── */
-.tab-content {
+/* User menu dropdown — hidden by default, .open shows it */
+.user-menu {
   display: none;
+  position: absolute;
+  top: calc(100% + 10px); /* 10px below the topbar-right row */
+  right: 0;
+  background: var(--dark2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  min-width: 180px;
+  z-index: 500;
   overflow: hidden;
-  height: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: menu-in 0.15s ease;
 }
+.user-menu.open { display: block; }
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Display name at top of dropdown */
+.user-menu-name {
+  padding: 14px 16px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Menu item buttons */
+.user-menu-item {
+  display: block;
+  width: 100%;
+  padding: 11px 16px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: left;
+  transition: var(--transition);
+}
+.user-menu-item:hover        { background: var(--dark3); color: var(--text); }
+.user-menu-item.danger:hover { color: var(--red); } /* Sign out button turns red */
+
+
+/* ══════════════════════════════════════════════════════════
+   5. AUTH MODAL
+   ──────────────────────────────────────────────────────────
+   Login/register overlay that appears before the user logs in.
+   Uses the shared .modal-overlay and .modal classes from section 24,
+   plus these auth-specific overrides.
+══════════════════════════════════════════════════════════ */
+
+/* Auth modal is wider and more centered than standard modals */
+.auth-modal {
+  width: 400px;
+  padding: 36px;
+  text-align: center;
+}
+
+/* Large logo inside the modal */
+.auth-logo {
+  font-family: var(--font-display);
+  font-size: 48px;
+  letter-spacing: 4px;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.auth-logo span { color: var(--accent); } /* AI part in green */
+
+.auth-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+/* Sign In / Create Account segmented tab bar */
+.auth-tabs {
+  display: flex;
+  background: var(--dark3);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+/* Active tab has a white background inside the segmented control */
+.auth-tab.active { background: var(--dark2); color: var(--accent); }
+
+/* Individual input field containers */
+.auth-field { text-align: left; margin-bottom: 14px; }
+
+.auth-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.auth-input {
+  width: 100%;
+  background: var(--dark3);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 14px;
+  font-size: 14px;
+  transition: border-color var(--transition);
+}
+.auth-input:focus { outline: none; border-color: var(--accent); }
+
+/* Error message below the last input field */
+/* Text is set by login()/register() in app.js */
+.auth-error {
+  font-size: 12px;
+  color: var(--red);
+  min-height: 18px; /* prevents layout jump when empty */
+  text-align: left;
+  margin-top: -6px;
+  margin-bottom: 4px;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   6. TAB CONTENT
+   ──────────────────────────────────────────────────────────
+   All .tab-content divs are hidden by default.
+   The .active class is added by switchTab() in app.js.
+══════════════════════════════════════════════════════════ */
+.tab-content        { display: none; overflow: hidden; height: 100%; }
 .tab-content.active { display: flex; flex-direction: column; }
 
-/* ── MAIN LAYOUT (Trainer tab) ─────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════
+   7. MAIN LAYOUT (Trainer tab)
+   ──────────────────────────────────────────────────────────
+   3-column grid: fixed left | flexible center | fixed right.
+   The left and right panels are fixed widths; the camera fills the rest.
+   ✅ TO CHANGE PANEL WIDTHS: edit the grid-template-columns values.
+   ❌ TO REMOVE THE RIGHT PANEL: delete the third column width and
+      the right-panel element from index.html.
+══════════════════════════════════════════════════════════ */
 .main-layout {
   display: grid;
-  grid-template-columns: 280px 1fr 300px;
+  grid-template-columns: 280px 1fr 300px; /* left | camera | right */
   height: 100%;
   overflow: hidden;
 }
 
-/* ── PANEL SHARED STYLES ───────────────────────────────── */
-.left-panel,
-.right-panel {
+
+/* ══════════════════════════════════════════════════════════
+   8. PANELS (shared left/right panel styles)
+   ──────────────────────────────────────────────────────────
+   Both panels scroll vertically independently.
+   .panel-section is the padded container for each panel block.
+══════════════════════════════════════════════════════════ */
+.left-panel, .right-panel {
   background: var(--dark2);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow-y: auto; /* each panel scrolls independently */
 }
 .left-panel  { border-right: 1px solid var(--border); }
-.right-panel { border-left: 1px solid var(--border); }
+.right-panel { border-left:  1px solid var(--border); }
 
 .panel-section {
   padding: 18px 20px;
@@ -177,6 +374,7 @@ input, select, textarea { font-family: var(--font-body); }
 }
 .panel-section:last-child { border-bottom: none; }
 
+/* Section label — e.g. "EXERCISE", "SESSION STATS" */
 .panel-label {
   font-size: 11px;
   font-weight: 600;
@@ -186,7 +384,13 @@ input, select, textarea { font-family: var(--font-body); }
   margin-bottom: 14px;
 }
 
-/* ── EXERCISE BUTTONS ──────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════
+   9. EXERCISE BUTTONS
+   ──────────────────────────────────────────────────────────
+   Each exercise is a full-width button card in the left panel.
+   Active exercise has a green border and green icon background.
+══════════════════════════════════════════════════════════ */
 .exercise-btn {
   width: 100%;
   background: var(--dark3);
@@ -202,17 +406,14 @@ input, select, textarea { font-family: var(--font-body); }
   text-align: left;
   position: relative;
 }
-.exercise-btn:hover { background: var(--dark4); border-color: var(--border-light); }
+.exercise-btn:hover      { background: var(--dark4); border-color: var(--border-light); }
 .exercise-btn:last-child { margin-bottom: 0; }
 
-.exercise-btn.active {
-  background: #1c2800;
-  border-color: var(--accent);
-}
-.exercise-btn.active .ex-icon {
-  background: var(--accent);
-}
+/* Active/selected exercise */
+.exercise-btn.active            { background: #1c2800; border-color: var(--accent); }
+.exercise-btn.active .ex-icon   { background: var(--accent); } /* icon turns green */
 
+/* Icon square on the left of each exercise button */
 .ex-icon {
   width: 36px; height: 36px;
   border-radius: 8px;
@@ -222,68 +423,57 @@ input, select, textarea { font-family: var(--font-body); }
   flex-shrink: 0;
   transition: background var(--transition);
 }
-.ex-info { flex: 1; min-width: 0; }
-.ex-name  { font-size: 14px; font-weight: 500; }
+
+.ex-info   { flex: 1; min-width: 0; }
+.ex-name   { font-size: 14px; font-weight: 500; }
 .ex-detail { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-.ex-check {
-  font-size: 12px;
-  color: var(--accent);
-  font-weight: 600;
-  flex-shrink: 0;
-}
+/* Checkmark shown on active exercise button */
+.ex-check  { font-size: 12px; color: var(--accent); font-weight: 600; flex-shrink: 0; }
 
-/* ── MINI STATS GRID ───────────────────────────────────── */
-.mini-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.mini-stat {
-  background: var(--dark3);
-  border-radius: 8px;
-  padding: 12px;
-}
-.mini-stat-val {
-  font-family: var(--font-display);
-  font-size: 28px;
-  line-height: 1;
-  color: var(--accent);
-}
-.mini-stat-label {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
 
-/* ── BADGES ────────────────────────────────────────────── */
-.badges-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
+/* ══════════════════════════════════════════════════════════
+   10. MINI STATS
+   ──────────────────────────────────────────────────────────
+   2-column grid of stat boxes in the left panel session stats section.
+   Values are updated by updateStats() in app.js.
+══════════════════════════════════════════════════════════ */
+.mini-stats      { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mini-stat       { background: var(--dark3); border-radius: 8px; padding: 12px; }
+.mini-stat-val   { font-family: var(--font-display); font-size: 28px; line-height: 1; color: var(--accent); }
+.mini-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   11. BADGES
+   ──────────────────────────────────────────────────────────
+   Badge pills used in both the profile tab and the summary modal.
+   .earned applies the green accent treatment.
+   Unearned badges are greyed out (default style).
+══════════════════════════════════════════════════════════ */
+.badges-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+
 .badge {
   background: var(--dark3);
   border: 1px solid var(--border-light);
   border-radius: 20px;
   padding: 5px 12px;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-muted); /* greyed out = not yet earned */
   cursor: default;
   transition: var(--transition);
 }
-.badge.earned {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: #1c2800;
-}
+/* Earned badge — green border and text */
+.badge.earned { border-color: var(--accent); color: var(--accent); background: #1c2800; }
 
-/* ── SET TARGET ────────────────────────────────────────── */
-.set-target-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+
+/* ══════════════════════════════════════════════════════════
+   12. SET TARGET
+   ──────────────────────────────────────────────────────────
+   +/− buttons and target text in the left panel.
+══════════════════════════════════════════════════════════ */
+.set-target-row { display: flex; align-items: center; gap: 12px; }
+
 .target-btn {
   width: 30px; height: 30px;
   background: var(--dark3);
@@ -296,9 +486,15 @@ input, select, textarea { font-family: var(--font-body); }
   display: flex; align-items: center; justify-content: center;
 }
 .target-btn:hover { background: var(--dark4); }
-#target-display { font-size: 14px; font-weight: 500; flex: 1; text-align: center; }
+#target-display   { font-size: 14px; font-weight: 500; flex: 1; text-align: center; }
 
-/* ── CENTER PANEL ──────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════
+   13. CENTER PANEL
+   ──────────────────────────────────────────────────────────
+   Flex column: camera area fills all remaining space, control
+   bar is fixed height at the bottom.
+══════════════════════════════════════════════════════════ */
 .center-panel {
   display: flex;
   flex-direction: column;
@@ -306,25 +502,27 @@ input, select, textarea { font-family: var(--font-body); }
   overflow: hidden;
 }
 
-/* ── CAMERA AREA ───────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════
+   14. CAMERA AREA
+   ──────────────────────────────────────────────────────────
+   flex:1 makes the camera fill all space above the control bar.
+   position:relative allows HUD elements to be absolutely positioned.
+══════════════════════════════════════════════════════════ */
 .camera-area {
   flex: 1;
   position: relative;
-  background: #080808;
+  background: #080808; /* near-black when feed not active */
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.camera-feed {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+/* MJPEG stream image — fills the camera area completely */
+.camera-feed { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* Waiting state */
+/* Waiting state placeholder — centered content when camera not active */
 .camera-waiting {
   display: flex;
   flex-direction: column;
@@ -340,278 +538,249 @@ input, select, textarea { font-family: var(--font-body); }
 .waiting-desc  { font-size: 14px; color: var(--text-dim); max-width: 260px; line-height: 1.6; }
 .waiting-desc strong { color: var(--text-muted); font-weight: 600; }
 
-/* Corner frame decorations */
-.corner-frame {
-  position: absolute;
-  width: 28px; height: 28px;
-  pointer-events: none;
-  z-index: 10;
-}
-.corner-frame::before,
-.corner-frame::after {
-  content: '';
-  position: absolute;
-  background: var(--accent);
-  opacity: 0.7;
-}
-.corner-frame::before { width: 2px; height: 20px; }
-.corner-frame::after  { width: 20px; height: 2px;  }
 
+/* ══════════════════════════════════════════════════════════
+   15. CAMERA HUD
+   ──────────────────────────────────────────────────────────
+   All HUD elements are absolutely positioned over the camera.
+   They start hidden (style="display:none" in index.html) and
+   are shown by startSession() in app.js.
+══════════════════════════════════════════════════════════ */
+
+/* ── Corner frame decorations (purely decorative) ──────── */
+.corner-frame { position: absolute; width: 28px; height: 28px; pointer-events: none; z-index: 10; }
+.corner-frame::before, .corner-frame::after { content: ''; position: absolute; background: var(--accent); opacity: 0.7; }
+.corner-frame::before { width: 2px; height: 20px; }  /* vertical line */
+.corner-frame::after  { width: 20px; height: 2px; }  /* horizontal line */
 .corner-tl { top: 16px; left: 16px; }
 .corner-tr { top: 16px; right: 16px; transform: scaleX(-1); }
 .corner-bl { bottom: 16px; left: 16px; transform: scaleY(-1); }
 .corner-br { bottom: 16px; right: 16px; transform: scale(-1); }
 
-/* LIVE badge */
+/* ── LIVE badge (top-right of camera) ──────────────────── */
 .live-indicator {
-  position: absolute;
-  top: 16px; right: 16px;
+  position: absolute; top: 16px; right: 16px;
   display: flex; align-items: center; gap: 6px;
   background: rgba(14,14,14,0.75);
   border: 1px solid rgba(255,64,64,0.4);
   border-radius: 20px;
   padding: 4px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
+  font-size: 12px; font-weight: 600; letter-spacing: 1px;
   z-index: 20;
   backdrop-filter: blur(4px);
 }
-.live-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--red);
-  animation: pulse-dot 1.2s ease-in-out infinite;
-}
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: pulse-dot 1.2s ease-in-out infinite; }
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.35; transform: scale(0.75); }
 }
 
-/* Rep HUD */
+/* ── Rep counter (top-centre of camera) ────────────────── */
+/* Large green number. Flash animation on each new rep. */
 .hud-reps {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  z-index: 20;
-  pointer-events: none;
+  position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  text-align: center; z-index: 20; pointer-events: none;
 }
 .hud-rep-num {
   display: block;
   font-family: var(--font-display);
-  font-size: 80px;
-  line-height: 1;
+  font-size: 80px; line-height: 1;
   color: var(--accent);
   text-shadow: 0 0 32px var(--accent-glow);
   letter-spacing: 4px;
   transition: transform 0.1s ease;
 }
-.hud-rep-num.flash {
-  animation: rep-flash 0.3s ease;
-}
+/* Flash animation — triggered by adding this class in app.js onRepCompleted() */
+.hud-rep-num.flash { animation: rep-flash 0.3s ease; }
 @keyframes rep-flash {
   0%   { transform: scale(1); }
-  40%  { transform: scale(1.18); }
+  40%  { transform: scale(1.18); } /* brief scale-up on rep */
   100% { transform: scale(1); }
 }
 .hud-rep-label {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 3px;
-  color: rgba(200,241,53,0.6);
+  font-size: 13px; font-weight: 600; letter-spacing: 3px;
+  color: rgba(200,241,53,0.6); /* dimmed accent */
   margin-top: -4px;
 }
 
-/* Phase label */
+/* ── Phase label (above bottom of camera) ──────────────── */
+/* e.g. "Lower down", "Drive up", "Set 1 complete! Rest…" */
 .hud-phase {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
   background: rgba(14,14,14,0.78);
   border: 1px solid rgba(200,241,53,0.25);
   border-radius: 20px;
   padding: 6px 20px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--accent);
-  white-space: nowrap;
-  z-index: 20;
+  font-size: 13px; font-weight: 500; color: var(--accent);
+  white-space: nowrap; z-index: 20;
   backdrop-filter: blur(6px);
   pointer-events: none;
   transition: opacity 0.2s ease;
 }
 
-/* Form feedback */
+/* ── Feedback overlay (bottom of camera above phase label) ─ */
+/* e.g. "✓ Good rep", "⚠ Go deeper" */
 .hud-feedback {
-  position: absolute;
-  bottom: 48px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  z-index: 20;
+  position: absolute; bottom: 48px; left: 50%; transform: translateX(-50%);
+  font-size: 12px; color: var(--text-muted);
+  white-space: nowrap; z-index: 20;
   pointer-events: none;
   transition: color 0.3s ease;
 }
+/* Type-specific colours — classes toggled by setFeedback() in app.js */
 .hud-feedback.good { color: var(--accent); }
 .hud-feedback.warn { color: var(--orange); }
 .hud-feedback.bad  { color: var(--red); }
 
-/* Angle pills */
+/* ── Angle overlay pills (left and right sides of camera) ── */
+/* Values updated by handleRepData() in app.js. */
 .angle-pill {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  position: absolute; top: 50%; transform: translateY(-50%);
   background: rgba(14,14,14,0.82);
   border: 1px solid var(--border-light);
   border-radius: 10px;
-  padding: 8px 12px;
-  z-index: 20;
+  padding: 8px 12px; z-index: 20;
   backdrop-filter: blur(4px);
-  min-width: 70px;
-  pointer-events: none;
+  min-width: 70px; pointer-events: none;
 }
-.angle-left  { left: 28px; }
-.angle-right { right: 28px; }
-.angle-val {
-  font-family: var(--font-display);
-  font-size: 22px;
-  color: var(--accent);
-  line-height: 1;
-}
-.angle-lbl {
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-top: 3px;
-}
+.angle-left  { left: 28px; }  /* left pill — angle 1 */
+.angle-right { right: 28px; } /* right pill — angle 2 */
+.angle-val { font-family: var(--font-display); font-size: 22px; color: var(--accent); line-height: 1; }
+.angle-lbl { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
 
-/* Confidence bar */
-.confidence-bar-wrap {
-  position: absolute;
-  bottom: 16px;
-  left: 28px;
-  z-index: 20;
-  pointer-events: none;
-}
-.confidence-label {
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-.confidence-track {
-  width: 120px; height: 4px;
-  background: var(--dark4);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.confidence-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
+/* ── Pose confidence bar (bottom-left of camera) ─────────── */
+/* Width set by handleRepData() in app.js. */
+.confidence-bar-wrap { position: absolute; bottom: 16px; left: 28px; z-index: 20; pointer-events: none; }
+.confidence-label    { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+.confidence-track    { width: 120px; height: 4px; background: var(--dark4); border-radius: 2px; overflow: hidden; }
+.confidence-fill     { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s ease; }
 
-/* ── CONTROL BAR ───────────────────────────────────────── */
+
+/* ══════════════════════════════════════════════════════════
+   16. CONTROL BAR
+   ──────────────────────────────────────────────────────────
+   Flex row at the bottom of the center panel.
+   Contains: session toggle | reset | voice | [spacer] | timer.
+══════════════════════════════════════════════════════════ */
 .control-bar {
   background: var(--dark2);
   border-top: 1px solid var(--border);
   padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0; /* don't let the camera area push this off screen */
 }
 
+/* Base button style used throughout the app */
 .ctrl-btn {
   background: var(--dark3);
   border: 1px solid var(--border-light);
   border-radius: 8px;
   padding: 8px 18px;
   color: var(--text);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 13px; font-weight: 500;
   transition: all var(--transition);
   white-space: nowrap;
 }
-.ctrl-btn:hover { background: var(--dark4); border-color: var(--dark5); }
+.ctrl-btn:hover  { background: var(--dark4); border-color: var(--dark5); }
 .ctrl-btn:active { transform: scale(0.97); }
 
+/* Primary (green) — used for Start Session, Save Settings, etc. */
 .ctrl-btn.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--dark);
+  color: var(--dark); /* black text on green background */
   font-weight: 700;
 }
 .ctrl-btn.primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
 
-.ctrl-btn.danger { border-color: rgba(255,64,64,0.5); color: var(--red); }
-.ctrl-btn.danger:hover { background: rgba(255,64,64,0.1); }
-
-.ctrl-divider {
-  flex: 1;
+/* Danger (red) — used for Stop Session, Clear All Data */
+.ctrl-btn.danger {
+  border-color: rgba(255,64,64,0.5);
+  color: var(--red);
+  background: rgba(255,64,64,0.08);
 }
+.ctrl-btn.danger:hover { background: rgba(255,64,64,0.16); }
 
-.timer-block { text-align: right; }
-.timer-label { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
+/* Flex spacer — pushes timer to the right end of the control bar */
+.ctrl-divider { flex: 1; }
+
+/* Session timer display */
+.timer-block   { text-align: right; }
+.timer-label   { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; }
 .timer-display {
   font-family: var(--font-display);
-  font-size: 30px;
-  letter-spacing: 2px;
-  color: var(--text);
-  line-height: 1;
+  font-size: 30px; letter-spacing: 2px;
+  color: var(--text); line-height: 1;
   transition: color 0.3s ease;
 }
+/* Timer turns green when a session is running (.running class toggled by start/endSession) */
 .timer-display.running { color: var(--accent); }
 
-/* ── FORM SCORE RING ───────────────────────────────────── */
-.form-score-section { align-items: center; }
 
-.score-ring-container {
-  position: relative;
-  width: 120px; height: 120px;
-  margin: 10px 0 6px;
+/* ══════════════════════════════════════════════════════════
+   17. FORM SCORE RING
+   ──────────────────────────────────────────────────────────
+   SVG ring in the right panel. Animated by updateFormScore() in app.js.
+   Shows an idle message when no session is running.
+══════════════════════════════════════════════════════════ */
+.form-score-section { align-items: center; } /* centres ring horizontally in panel */
+
+/* Idle message when no session is running */
+.score-idle-msg {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 8px 0;
+  line-height: 1.6;
 }
-.score-ring-svg { display: block; }
+
+.score-ring-wrap       { display: flex; flex-direction: column; align-items: center; }
+.score-ring-container  { position: relative; width: 120px; height: 120px; margin: 10px 0 6px; }
+.score-ring-svg        { display: block; }
+
+/* Background grey track of the ring */
 .score-track { fill: none; stroke: var(--dark4); stroke-width: 10; }
-.score-fill  {
+
+/* Coloured fill — stroke-dashoffset animated from 314 (empty) to 0 (full) */
+/* stroke colour changed dynamically by updateFormScore() in app.js */
+.score-fill {
   fill: none;
-  stroke: var(--accent);
+  stroke: var(--accent); /* default colour, overridden by updateFormScore() */
   stroke-width: 10;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
 }
-.score-overlay {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-}
-.score-num {
-  font-family: var(--font-display);
-  font-size: 36px;
-  color: var(--accent);
-  line-height: 1;
-  transition: color 0.3s ease;
-}
-.score-sub { font-size: 11px; color: var(--text-muted); }
-.score-grade {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 1px;
+
+/* Number and "/ 100" centred inside the ring */
+.score-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+.score-num     { font-family: var(--font-display); font-size: 36px; color: var(--accent); line-height: 1; transition: color 0.3s ease; }
+.score-sub     { font-size: 11px; color: var(--text-muted); }
+
+/* Grade text below the ring e.g. "Good", "Excellent" */
+.score-grade { font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: 1px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   18. COACH FEEDBACK
+   ──────────────────────────────────────────────────────────
+   Feedback list in the right panel. Items added by pushFeedbackItem() in app.js.
+   .fi-count is the "x3" deduplication counter added in this update.
+══════════════════════════════════════════════════════════ */
+
+/* Idle message shown when no session is running */
+.feedback-idle-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
 }
 
-/* ── COACH FEEDBACK LIST ───────────────────────────────── */
-.feedback-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
+/* Live feedback list */
+.feedback-list   { display: flex; flex-direction: column; gap: 0; }
+
 .feedback-item {
   display: flex;
   align-items: flex-start;
@@ -620,138 +789,141 @@ input, select, textarea { font-family: var(--font-body); }
   border-bottom: 1px solid var(--border);
 }
 .feedback-item:last-child { border-bottom: none; }
-.fi-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 5px;
-}
-.fi-dot.good { background: var(--green); }
-.fi-dot.warn { background: var(--orange); }
-.fi-dot.bad  { background: var(--red); }
-.fi-text { font-size: 13px; line-height: 1.5; color: var(--text-muted); }
+
+/* Coloured dot indicator */
+.fi-dot       { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.fi-dot.good  { background: var(--green); }
+.fi-dot.warn  { background: var(--orange); }
+.fi-dot.bad   { background: var(--red); }
+
+/* Feedback message text */
+.fi-text        { font-size: 15px; line-height: 1.5; color: var(--text-muted); flex: 1; }
 .fi-text strong { color: var(--text); font-weight: 500; }
 
-/* ── WEEK CHART ────────────────────────────────────────── */
-.week-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 5px;
-  height: 64px;
-  margin-top: 12px;
-}
-.bar-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
-}
-.bar {
-  width: 100%;
-  border-radius: 3px 3px 0 0;
-  background: var(--dark4);
-  min-height: 4px;
-  transition: height 0.4s ease;
-}
-.bar.today { background: var(--accent); }
-.bar-day { font-size: 10px; color: var(--text-dim); }
-
-/* ── DAILY CHALLENGE ───────────────────────────────────── */
-.challenge-card {
-  background: var(--dark3);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius);
-  padding: 14px;
-}
-.challenge-name {
-  font-size: 14px;
-  font-weight: 600;
+/* Deduplication counter — e.g. "x3" when same message repeats.
+   Added in the updated pushFeedbackItem() function in app.js. */
+.fi-count {
+  margin-left: auto;
   color: var(--accent);
-  margin-bottom: 6px;
-}
-.challenge-desc {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.55;
-  margin-bottom: 12px;
-}
-.challenge-progress-track {
-  background: var(--dark4);
-  border-radius: 4px;
-  height: 6px;
-  overflow: hidden;
-}
-.challenge-progress-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 4px;
-  transition: width 0.4s ease;
-}
-.challenge-meta {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 7px;
-  font-size: 11px;
-  color: var(--text-muted);
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* ── HISTORY TAB ───────────────────────────────────────── */
-.history-page {
-  padding: 32px;
-  overflow-y: auto;
-  height: 100%;
-  flex: 1;
-}
-.page-title {
-  font-family: var(--font-display);
-  font-size: 40px;
-  letter-spacing: 2px;
-  color: var(--text);
-  line-height: 1;
-}
-.page-sub { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
+
+/* ══════════════════════════════════════════════════════════
+   19. WEEK CHART
+   ──────────────────────────────────────────────────────────
+   7-bar chart in the left panel. Bars injected by renderWeekChart() in app.js.
+   Today's bar (.today) is highlighted in accent green.
+══════════════════════════════════════════════════════════ */
+.week-chart { display: flex; align-items: flex-end; gap: 5px; height: 64px; margin-top: 12px; }
+.bar-col    { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.bar        { width: 100%; border-radius: 3px 3px 0 0; background: var(--dark4); min-height: 4px; transition: height 0.4s ease; }
+.bar.today  { background: var(--accent); } /* today's bar is green */
+.bar-day    { font-size: 10px; color: var(--text-dim); }
+
+
+/* ══════════════════════════════════════════════════════════
+   20. DAILY CHALLENGE
+   ──────────────────────────────────────────────────────────
+   Progress bar card in the right panel.
+   Text and progress width updated by updateChallenge() in app.js.
+══════════════════════════════════════════════════════════ */
+.challenge-card              { background: var(--dark3); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px; }
+.challenge-name              { font-size: 14px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+.challenge-desc              { font-size: 12px; color: var(--text-muted); line-height: 1.55; margin-bottom: 12px; }
+.challenge-progress-track    { background: var(--dark4); border-radius: 4px; height: 6px; overflow: hidden; }
+.challenge-progress-fill     { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s ease; }
+.challenge-meta              { display: flex; justify-content: space-between; margin-top: 7px; font-size: 11px; color: var(--text-muted); }
+
+
+/* ══════════════════════════════════════════════════════════
+   21. HISTORY TAB
+   ──────────────────────────────────────────────────────────
+   Page layout and session history card styles.
+   Cards rendered by renderHistory() in app.js.
+══════════════════════════════════════════════════════════ */
+.history-page   { padding: 32px; overflow-y: auto; height: 100%; flex: 1; }
+.page-title     { font-family: var(--font-display); font-size: 40px; letter-spacing: 2px; color: var(--text); line-height: 1; }
+.page-sub       { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
 .history-header { margin-bottom: 28px; }
+.history-list   { display: flex; flex-direction: column; gap: 12px; }
+.history-empty  { font-size: 14px; color: var(--text-dim); padding: 40px 0; text-align: center; }
 
-.history-list { display: flex; flex-direction: column; gap: 12px; }
-.history-empty { font-size: 14px; color: var(--text-dim); padding: 40px 0; text-align: center; }
-
+/* History card — 2-column: exercise info | stats */
 .history-card {
   background: var(--dark2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 16px 20px;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto; /* info | stats */
   gap: 12px;
   align-items: center;
   transition: border-color var(--transition);
 }
-.history-card:hover { border-color: var(--border-light); }
-.history-card-left h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-.history-card-left p { font-size: 13px; color: var(--text-muted); }
-.history-card-stats {
-  display: flex;
-  gap: 20px;
-  text-align: right;
-}
+.history-card:hover          { border-color: var(--border-light); }
+.history-card-left h3        { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.history-card-left p         { font-size: 13px; color: var(--text-muted); }
+.history-card-stats          { display: flex; gap: 20px; text-align: right; }
 .hcs-val { font-family: var(--font-display); font-size: 22px; color: var(--accent); line-height: 1; }
 .hcs-lbl { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
 
-/* ── PROGRESS TAB ──────────────────────────────────────── */
-.progress-page {
-  padding: 32px;
-  overflow-y: auto;
-  height: 100%;
-  flex: 1;
-}
-.progress-header { margin-bottom: 28px; }
 
-.progress-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+/* ══════════════════════════════════════════════════════════
+   22. PROFILE TAB
+   ──────────────────────────────────────────────────────────
+   Profile hero (avatar + name + level/streak) and 2-column card grid.
+══════════════════════════════════════════════════════════ */
+.profile-page { padding: 32px; overflow-y: auto; height: 100%; flex: 1; }
+
+/* Hero section — large avatar, name, username, level/streak row */
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 28px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
 }
+
+/* Large avatar circle — same style as topbar avatar but bigger */
+.profile-avatar-lg {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  font-size: 26px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.profile-name     { font-family: var(--font-display); font-size: 36px; letter-spacing: 1px; line-height: 1; }
+.profile-username { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+.profile-level-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 10px; font-size: 13px; color: var(--text-muted);
+}
+.profile-level-row strong { color: var(--accent); }
+.profile-streak            { color: var(--orange); font-weight: 500; }
+
+/* 2-column card grid */
+.profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Extra padding for badges card to space items nicely */
+.badges-card .badges-grid { gap: 8px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   23. PROGRESS CARDS (shared shell + contents)
+   ──────────────────────────────────────────────────────────
+   Card container used for all profile stat blocks.
+   .stat-summary spans both columns (full width).
+══════════════════════════════════════════════════════════ */
 .progress-card {
   background: var(--dark2);
   border: 1px solid var(--border);
@@ -759,59 +931,48 @@ input, select, textarea { font-family: var(--font-body); }
   padding: 20px;
 }
 .progress-card-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  margin-bottom: 16px;
+  font-size: 13px; font-weight: 600; color: var(--text-muted);
+  letter-spacing: 0.5px; margin-bottom: 16px;
 }
+/* All-time stats card — full width across both grid columns */
 .progress-card.stat-summary { grid-column: span 2; }
 
-/* All-time stats */
-.alltime-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-.alltime-val {
-  font-family: var(--font-display);
-  font-size: 36px;
-  color: var(--accent);
-  line-height: 1;
-}
-.alltime-lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+/* All-time stats 4-column sub-grid inside the stat-summary card */
+.alltime-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.alltime-val  { font-family: var(--font-display); font-size: 36px; color: var(--accent); line-height: 1; }
+.alltime-lbl  { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
-/* Exercise breakdown */
-.ex-breakdown { display: flex; flex-direction: column; gap: 10px; }
-.ex-breakdown-item { display: flex; align-items: center; gap: 12px; }
-.ex-breakdown-name { width: 110px; font-size: 13px; color: var(--text-muted); }
-.ex-breakdown-track {
-  flex: 1;
-  height: 6px;
-  background: var(--dark4);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.ex-breakdown-fill {
-  height: 100%;
-  background: var(--accent);
-  border-radius: 3px;
-}
+/* Exercise breakdown proportion bars */
+.ex-breakdown       { display: flex; flex-direction: column; gap: 10px; }
+.ex-breakdown-item  { display: flex; align-items: center; gap: 12px; }
+.ex-breakdown-name  { width: 110px; font-size: 13px; color: var(--text-muted); }
+.ex-breakdown-track { flex: 1; height: 6px; background: var(--dark4); border-radius: 3px; overflow: hidden; }
+.ex-breakdown-fill  { height: 100%; background: var(--accent); border-radius: 3px; }
 .ex-breakdown-count { font-size: 13px; font-weight: 500; color: var(--text); min-width: 40px; text-align: right; }
 
-/* ── MODALS ────────────────────────────────────────────── */
+/* Canvas chart sizing */
+canvas { display: block; max-width: 100%; height: auto; }
+
+
+/* ══════════════════════════════════════════════════════════
+   24. MODALS
+   ──────────────────────────────────────────────────────────
+   Shared overlay and modal shell used for settings and summary.
+   The auth modal also uses .modal-overlay and .modal, with
+   its own overrides in section 5 above.
+══════════════════════════════════════════════════════════ */
+
+/* Full-screen dark overlay — hidden by default, .open shows it */
 .modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.7);
-  display: none;
-  align-items: center;
-  justify-content: center;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: none; align-items: center; justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px); /* blurs the content behind the modal */
 }
 .modal-overlay.open { display: flex; }
 
+/* Modal box — centred card with rounded corners */
 .modal {
   background: var(--dark2);
   border: 1px solid var(--border-light);
@@ -827,134 +988,97 @@ input, select, textarea { font-family: var(--font-body); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.modal-title { font-family: var(--font-display); font-size: 24px; letter-spacing: 1px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+.modal-title  { font-family: var(--font-display); font-size: 24px; letter-spacing: 1px; }
+
+/* Close ✕ button in modal header */
 .modal-close {
-  background: var(--dark3);
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  color: var(--text-muted);
-  width: 30px; height: 30px;
+  background: var(--dark3); border: 1px solid var(--border-light); border-radius: 6px;
+  color: var(--text-muted); width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  transition: var(--transition);
+  font-size: 14px; transition: var(--transition);
 }
 .modal-close:hover { color: var(--text); background: var(--dark4); }
 
 .modal-body { padding: 20px 24px 24px; }
 
-/* Setting rows */
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-}
+/* Settings rows — each is a flex row: label on left, control on right */
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .setting-row:last-of-type { border-bottom: none; }
 .setting-label { font-size: 14px; color: var(--text); }
 
-/* Toggle */
+/* Toggle switch component */
 .toggle { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; }
 .toggle input { opacity: 0; width: 0; height: 0; }
 .toggle-track {
   position: absolute; inset: 0;
-  background: var(--dark4);
-  border: 1px solid var(--border-light);
-  border-radius: 24px;
-  transition: var(--transition);
+  background: var(--dark4); border: 1px solid var(--border-light);
+  border-radius: 24px; transition: var(--transition);
 }
 .toggle-track::before {
-  content: '';
-  position: absolute;
-  left: 3px; top: 50%;
-  transform: translateY(-50%);
-  width: 16px; height: 16px;
-  background: var(--text-muted);
-  border-radius: 50%;
+  content: ''; position: absolute; left: 3px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; background: var(--text-muted); border-radius: 50%;
   transition: all var(--transition);
 }
+/* Checked (on) state — green background, white dot slides right */
 .toggle input:checked + .toggle-track { background: #1c2800; border-color: var(--accent); }
 .toggle input:checked + .toggle-track::before { transform: translateX(20px) translateY(-50%); background: var(--accent); }
 
-/* Select & input */
-.setting-row select,
-.setting-input {
-  background: var(--dark3);
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  color: var(--text);
-  padding: 6px 10px;
-  font-size: 13px;
-  width: 160px;
+/* Select dropdowns in settings rows */
+.setting-row select, .setting-input {
+  background: var(--dark3); border: 1px solid var(--border-light);
+  border-radius: 6px; color: var(--text); padding: 6px 10px;
+  font-size: 13px; width: 160px;
 }
-.setting-row select:focus,
-.setting-input:focus { outline: none; border-color: var(--accent); }
+.setting-row select:focus, .setting-input:focus { outline: none; border-color: var(--accent); }
 .setting-row select option { background: var(--dark3); }
 
-/* Summary modal */
-.summary-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-.summary-stat {
-  background: var(--dark3);
-  border-radius: 10px;
-  padding: 14px;
-  text-align: center;
-}
-.summary-val {
-  font-family: var(--font-display);
-  font-size: 36px;
-  color: var(--accent);
-  line-height: 1;
-}
-.summary-lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
-.summary-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 8px;
-}
+/* ══════════════════════════════════════════════════════════
+   25. SUMMARY MODAL
+   ──────────────────────────────────────────────────────────
+   2×2 grid of stat boxes + badges row + "Keep going" button.
+   Values set by showSummary() in app.js.
+══════════════════════════════════════════════════════════ */
+.summary-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.summary-stat  { background: var(--dark3); border-radius: 10px; padding: 14px; text-align: center; }
+.summary-val   { font-family: var(--font-display); font-size: 36px; color: var(--accent); line-height: 1; }
+.summary-lbl   { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+.summary-badges { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 8px; }
 
-/* Canvas for progress charts */
-canvas {
-  display: block;
-  max-width: 100%;
-  height: auto;
+
+/* ══════════════════════════════════════════════════════════
+   26. RESPONSIVE BREAKPOINTS
+   ──────────────────────────────────────────────────────────
+   The layout gracefully degrades on smaller screens.
+
+   1100px: shrink panel widths slightly
+    960px: hide right panel (form score, feedback, challenge)
+    680px: hide left panel and tab nav (single-column mobile view)
+
+   ✅ TO ADD A BREAKPOINT: add a new @media block below.
+   ✅ TO CHANGE WHEN THE RIGHT PANEL HIDES: edit the 960px value.
+   ✅ TO CHANGE WHEN THE LEFT PANEL HIDES: edit the 680px value.
+══════════════════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  /* Slightly narrower panels on mid-size screens */
+  .main-layout { grid-template-columns: 240px 1fr 260px; }
 }
 
-/* ── RESPONSIVE (basic) ────────────────────────────────── */
 @media (max-width: 960px) {
-  .main-layout {
-    grid-template-columns: 240px 1fr;
-  }
+  /* Hide right panel — form score, feedback, challenge disappear */
+  .main-layout { grid-template-columns: 240px 1fr; }
   .right-panel { display: none; }
 }
 
 @media (max-width: 680px) {
-  .main-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
-  }
-  .left-panel { display: none; }
-  .topbar-center { display: none; }
-}
+  /* Single column — left panel and tab nav hidden, only camera + controls visible */
+  .main-layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .left-panel  { display: none; }
+  .topbar-center { display: none; } /* hide tab buttons in topbar on mobile */
 
-/* ── DAILY SCHEDULE TAB ────────────────────────────────── */
-.schedule-page {
-  padding: 32px;
-  overflow-y: auto;
-  height: 100%;
-  flex: 1;
+  /* Profile and progress grids collapse to single column */
+  .profile-grid { grid-template-columns: 1fr; }
+  .progress-card.stat-summary { grid-column: span 1; }
+  .alltime-grid { grid-template-columns: repeat(2, 1fr); } /* 2-col instead of 4 */
 }
-.schedule-header { margin-bottom: 28px; }
