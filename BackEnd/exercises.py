@@ -233,19 +233,10 @@ class ExerciseTracker:
             # Reached bottom position
             if self.phase == "up":
                 self.phase = "down"
-                self.rep_start_time = cv2.getTickCount() # Start a timer
+                self.form_issues = [] # Start a timer
 # VALIDATION: 
     # 1. Rep must be faster than 4 seconds (Sitting usually lasts longer)
     # 2. Hip must have moved vertically (not just knees bending)
-    if 0.5 < duration < 4.0:
-        self.phase = "up"
-        self.rep_count += 1
-        new_rep = True
-    else:
-        # It was probably someone sitting down or a false trigger
-        self.phase = "up" 
-        new_rep = False
-        
             # Check depth and lean
             if knee_angle > cfg["knee_down"] + 15 + offset:
                 issues.append("too_shallow")
