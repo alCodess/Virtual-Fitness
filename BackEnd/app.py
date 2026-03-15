@@ -115,7 +115,7 @@ class AppState:
             if self.tracker:
                 self.tracker.reset(exercise)
             if self.cap is None or not self.cap.isOpened():
-                self.cap = cv2.VideoCapture(0)
+                self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
                 self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1280)
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 

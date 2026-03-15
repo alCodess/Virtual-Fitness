@@ -201,7 +201,7 @@ function register()
 
   if(!username) return (errEl.textContent = 'Username is required.');
   if(!/^[a-z0-9_]+$/.test(username)) return (errEl.textContent = 'Username: letters, numbers amd _ only.');
-  if(password.legth < 4) return (errEl.textContent = 'Password must be at least 4 charavters long.');
+  if(password.length < 4) return (errEl.textContent = 'Password must be at least 4 characters long.');
   if(password !== confirm) return (errEl.textContent = 'Passwords do not match.');
 
   const accounts = getAccounts();
@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   else
   {
-    showAuthTab('lgin');
+    showAuthTab('login');
   }
 
   initSocket();
@@ -314,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 //Sessions - array of { id, date, exercose, reps, sets, calories, duration, formscore }
 function getSessions() {const k = userKey('sessions'); return k ? JSON.parse(localStorage.getItem(k) || '[]') : []; }
+function saveSessions(s) { const k = userKey('sessions'); if (k) localStorage.setItem(k, JSON.stringify(s)); }
 
 // Settings — { voice, angles, beep, resolution, sensitivity }
 function getSettings()      { const k = userKey('settings'); return k ? JSON.parse(localStorage.getItem(k) || '{}') : {}; }
@@ -343,12 +344,6 @@ function startTimer() {
 }
 
 function stopTimer() {
-  clearInterval(timerInterval);
-  timerInterval = null;
-}
-
-function stopTimer()
-{
   clearInterval(timerInterval);
   timerInterval = null;
 }
@@ -402,6 +397,13 @@ function initSocket() {
   socket.on('pose_lost', () => {
     setFeedback('Pose not detected — move into frame', 'warn');
     el('hud-phase').textContent = 'No pose detected';
+  });
+
+  socket.on('session_summary', (data) => {
+    // Backend has saved the session — now save it locally too and refresh UI
+    renderWeekChart();
+    updateLevel();
+    renderProfile();
   });
 }
 
