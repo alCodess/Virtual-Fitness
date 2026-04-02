@@ -59,9 +59,9 @@ try:
     from exercises import ExerciseTracker
     TRACKING_AVAILABLE = True
     print("[FormAI] Tracking modules loaded OK")
-except ImportError:
+except ImportError as exc:
     TRACKING_AVAILABLE = False
-    print("[FormAI] pose_engine / exercises not found — running in demo mode")
+    print(f"[FormAI] Tracking unavailable ({exc!r}) — running in demo mode")
 
 
 # ── FLASK APP ────────────────────────────────────────────
@@ -114,8 +114,18 @@ class AppState:
             self.form_scores      = []
             if self.tracker:
                 self.tracker.reset(exercise)
-            if self.cap is None or not self.cap.isOpened():
-                self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+            if self.pose_engine and hasattr(self.pose_engine, "reset_stream"):
+                self.pose_engine.reset_stream()
+            # Always grab a fresh capture each session — avoids dead handles after stop/release on Windows.
+            if self.cap is not None:
+                try:
+                    if self.cap.isOpened():
+                        self.cap.release()
+                except Exception:
+                    pass
+                self.cap = None
+            self.cap = _open_capture()
+            if self.cap and self.cap.isOpened():
                 self.cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1280)
                 self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
@@ -123,12 +133,24 @@ class AppState:
         with self.lock:
             self.is_tracking = False
 
+    def resume(self):
+        """Resume pose processing without resetting session/tracker (unlike start())."""
+        with self.lock:
+            self.is_tracking = True
+            if self.cap is None or not self.cap.isOpened():
+                self.cap = _open_capture()
+                if self.cap and self.cap.isOpened():
+                    self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+                    self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
     def stop(self):
         with self.lock:
             self.is_tracking = False
             if self.cap and self.cap.isOpened():
                 self.cap.release()
             self.cap = None
+            self.latest_frame = None
+        self.frame_event.set()
 
     def change_exercise(self, exercise: str):
         with self.lock:
@@ -149,6 +171,34 @@ class AppState:
 
 
 g = AppState()
+
+_POSE_LOST_INTERVAL = 0.45
+_last_pose_lost_emit = 0.0
+
+
+def _open_capture():
+    """Try DirectShow then default API/C indices—reduces 'black camera' setups on Windows."""
+    indices = (0, 1)
+    dshow = getattr(cv2, "CAP_DSHOW", None)
+    tries = []
+    if dshow is not None:
+        for i in indices:
+            tries.append((i, dshow))
+    for i in indices:
+        tries.append((i, cv2.CAP_ANY))
+    for idx, api in tries:
+        cap = cv2.VideoCapture(idx, api)
+        if not cap.isOpened():
+            cap.release()
+            continue
+        ok, _ = cap.read()
+        if ok:
+            print(f"[FormAI] Camera opened (index={idx}, api={api})")
+            return cap
+        cap.release()
+    cap = cv2.VideoCapture(0)
+    print("[FormAI] Camera fallback: index=0 default backend")
+    return cap
 
 
 # ── CAMERA THREAD ─────────────────────────────────────────
@@ -185,8 +235,17 @@ def camera_loop():
                     sensitivity = snap["sensitivity"],
                     frame       = annotated,
                 )
+                if rep_data is None:
+                    rep_data = g.tracker.preview(
+                        landmarks,
+                        snap["current_exercise"],
+                    )
             else:
-                socketio.emit("pose_lost", {})
+                global _last_pose_lost_emit
+                now = time.monotonic()
+                if now - _last_pose_lost_emit >= _POSE_LOST_INTERVAL:
+                    socketio.emit("pose_lost", {})
+                    _last_pose_lost_emit = now
 
         # Update session state and push to browsers
         if rep_data:
@@ -195,8 +254,7 @@ def camera_loop():
                     g.session_reps += 1
                     if g.session_reps % 10 == 0:
                         g.session_sets += 1
-                score = rep_data.get("form_score", 80)
-                g.form_scores.append(score)
+                    g.form_scores.append(rep_data.get("form_score", 80))
                 rep_data["session_reps"] = g.session_reps
 
             socketio.emit("rep_data", rep_data)
@@ -263,9 +321,8 @@ def video_feed():
     MJPEG stream consumed by the <img id='camera-feed'> in index.html.
     Optional query param: ?exercise=squat
     """
-    exercise = request.args.get("exercise", g.current_exercise)
-    with g.lock:
-        g.current_exercise = exercise
+    exercise = (request.args.get("exercise") or g.current_exercise or "squat").strip().lower()
+    g.change_exercise(exercise)
     return Response(
         generate_frames(),
         mimetype="multipart/x-mixed-replace; boundary=frame",
@@ -361,7 +418,8 @@ def on_disconnect():
 @socketio.on("start_tracking")
 def on_start_tracking(data):
     """Browser → { exercise: 'squat' }  ·  Starts webcam + processing."""
-    exercise = data.get("exercise", "squat")
+    data = data or {}
+    exercise = (data.get("exercise") or "squat").strip().lower()
     print(f"[FormAI] Start tracking — {exercise}")
     g.start(exercise)
     emit("tracking_started", {"exercise": exercise})
@@ -372,6 +430,13 @@ def on_pause_tracking():
     print("[FormAI] Paused")
     g.pause()
     emit("tracking_paused", {})
+
+
+@socketio.on("resume_tracking")
+def on_resume_tracking():
+    print("[FormAI] Resumed")
+    g.resume()
+    emit("tracking_resumed", {})
 
 
 @socketio.on("stop_tracking")
@@ -415,7 +480,8 @@ def on_stop_tracking():
 
 @socketio.on("change_exercise")
 def on_change_exercise(data):
-    exercise = data.get("exercise", "squat")
+    data = data or {}
+    exercise = (data.get("exercise") or "squat").strip().lower()
     print(f"[FormAI] Exercise changed → {exercise}")
     g.change_exercise(exercise)
     emit("exercise_changed", {"exercise": exercise})
@@ -424,7 +490,10 @@ def on_change_exercise(data):
 @socketio.on("update_settings")
 def on_update_settings(data):
     """Browser → { sensitivity: 'normal' }"""
-    sensitivity = data.get("sensitivity", "normal")
+    data = data or {}
+    sensitivity = (data.get("sensitivity") or "normal").strip().lower()
+    if sensitivity not in {"lenient", "normal", "strict"}:
+        sensitivity = "normal"
     with g.lock:
         g.sensitivity = sensitivity
     print(f"[FormAI] Sensitivity → {sensitivity}")

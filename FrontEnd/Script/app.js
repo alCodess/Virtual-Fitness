@@ -123,6 +123,9 @@ const state = {
   formScores:      [],        // collect to compute avg
   formScore:       80,
   isRunning:       false,
+  isPaused:        false,
+  /** @type {null | 'manual' | 'set_complete'} */
+  pauseReason:     null,
   voiceOn:         false,
   timerSeconds:    0,
   targetSets:      3,
@@ -292,6 +295,7 @@ function initUserUI()
   loadStreak();
   renderWeekChart();
   updateLevel();
+  renderProgress();
 }
 
 //Page Load
@@ -310,6 +314,12 @@ document.addEventListener('DOMContentLoaded', () => {
   initSocket();
   loadExerciseFeedback(EXERCISES['squat']);
   updateChallenge();
+
+  if (window.speechSynthesis) {
+    const primeVoices = () => window.speechSynthesis.getVoices();
+    primeVoices();
+    window.speechSynthesis.addEventListener('voiceschanged', primeVoices, { once: true });
+  }
 });
 
 //Sessions - array of { id, date, exercose, reps, sets, calories, duration, formscore }
@@ -404,32 +414,38 @@ function initSocket() {
     renderWeekChart();
     updateLevel();
     renderProfile();
+    renderProgress();
   });
 }
 
 function handleRepData(data) {
-  // Rep count
-  if (data.rep_count !== undefined && data.rep_count > state.reps) {
-    const diff = data.rep_count - state.reps;
-    state.reps       += diff;
-    state.totalReps  += diff;
+  // Reps: only trust backend `new_rep`. Session rep_count does not reset per set,
+  // so comparing rep_count to state.reps (which resets each set) caused hundreds
+  // of fake reps and beeps every second at ~30fps.
+  if (data.new_rep === true) {
+    state.reps += 1;
+    state.totalReps += 1;
     onRepCompleted();
   }
 
   // Phase
   if (data.phase) el('hud-phase').textContent = data.phase;
 
-  // Form score
+  // Form score — update ring live; only record for session average on completed reps
   if (data.form_score !== undefined) {
     state.formScore = data.form_score;
-    state.formScores.push(data.form_score);
     updateFormScore(data.form_score);
+    if (data.new_rep === true) {
+      state.formScores.push(data.form_score);
+    }
   }
 
-  // Angles
-  if (data.angle1 !== undefined) {
+  // Angles (preview frames may omit angles)
+  if (data.angle1 !== undefined && data.angle1 !== null) {
     el('angle-val-left').textContent  = Math.round(data.angle1) + '°';
-    el('angle-val-right').textContent = Math.round(data.angle2) + '°';
+    el('angle-val-right').textContent = (data.angle2 !== undefined && data.angle2 !== null)
+      ? Math.round(data.angle2) + '°'
+      : '—';
   }
 
   // Pose confidence bar
@@ -439,10 +455,12 @@ function handleRepData(data) {
     el('confidence-wrap').style.display = 'block';
   }
 
-  // Coach feedback
+  // Coach feedback — HUD updates every frame; list only on real reps (avoid spam)
   if (data.feedback) {
     setFeedback(data.feedback, data.feedback_type || 'good');
-    pushFeedbackItem(data.feedback, data.feedback_type || 'good');
+    if (data.new_rep === true) {
+      pushFeedbackItem(data.feedback, data.feedback_type || 'good');
+    }
   }
 }
 
@@ -462,8 +480,20 @@ function toggleSession() {
 function startSession() {
   if (!currentUser()) return;
 
+  state.isPaused     = false;
+  state.pauseReason  = null;
+  el('set-complete-overlay')?.classList.remove('open');
+
   state.isRunning    = true;
   state.sessionStart = state.sessionStart || Date.now();
+  state.reps         = 0;
+  state.totalReps    = 0;
+  state.sets         = 0;
+  state.timerSeconds = 0;
+  state.calories     = 0;
+  state.formScores   = [];
+  el('hud-rep-num').textContent = '0';
+  el('timer-display').textContent = '00:00';
 
   // ── Toggle button to Stop (red) ───────────────────────
   el('session-btn').classList.remove('primary');
@@ -493,14 +523,17 @@ function startSession() {
   }
 
   // ── Start MJPEG stream from the backend ───────────────
-  // The ?exercise= param tells the backend which exercise to start tracking
+  // Cache-bust ?_= so the browser opens a new stream after Stop (same URL would stick)
   const feed        = el('camera-feed');
-  feed.src          = `/video_feed?exercise=${state.currentExercise}`;
+  feed.removeAttribute('src');
+  feed.src          = `/video_feed?exercise=${encodeURIComponent(state.currentExercise)}&_=${Date.now()}`;
   feed.style.display = 'block';
 
   if (socket) socket.emit('start_tracking', { exercise: state.currentExercise });
   startTimer();
   updateStats(); // reset stat boxes to current (zeroed) values
+  updatePauseButton();
+  updateLiveIndicator();
 }
 
 // endSession() — stops everything, saves the session, shows the summary.
@@ -508,6 +541,9 @@ function startSession() {
 function endSession() {
   if (!state.isRunning && state.totalReps === 0) return;
   state.isRunning = false;
+  state.isPaused = false;
+  state.pauseReason = null;
+  el('set-complete-overlay')?.classList.remove('open');
 
   // ── Toggle button back to Start (green) ───────────────
   el('session-btn').classList.remove('danger');
@@ -518,6 +554,9 @@ function endSession() {
   el('camera-feed').src           = '';
   el('camera-feed').style.display = 'none';
   el('camera-waiting').style.display = 'flex';
+  el('live-indicator').classList.remove('paused');
+  const liveLbl = el('live-indicator-label');
+  if (liveLbl) liveLbl.textContent = 'LIVE';
   el('live-indicator').style.display  = 'none';
   el('timer-display').classList.remove('running'); // turns white
 
@@ -539,6 +578,7 @@ function endSession() {
 
   if (socket) socket.emit('stop_tracking');
   stopTimer();
+  updatePauseButton();
 
   if (state.totalReps === 0) return; // nothing to save
 
@@ -549,6 +589,7 @@ function endSession() {
   awardBadges();     // check if any badges were newly earned
   updateLevel();     // recalculate XP level based on updated all-time reps
   renderWeekChart(); // refresh 7-day bar chart in left panel
+  renderProgress();  // charts on Progress tab
 }
 
 // resetCurrentSet() — zeroes the per-set rep counter WITHOUT ending the session.
@@ -558,6 +599,116 @@ function resetCurrentSet() {
   el('hud-rep-num').textContent = '0';
   el('hud-phase').textContent   = 'Ready — stand in frame';
   updateChallenge();
+}
+
+
+function updatePauseButton() {
+  const btn = el('pause-btn');
+  if (!btn) return;
+  if (!state.isRunning) {
+    btn.style.display = 'none';
+    return;
+  }
+  if (state.isPaused && state.pauseReason === 'set_complete') {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'inline-flex';
+  btn.textContent = state.isPaused ? '▶ Resume' : '⏸ Pause';
+}
+
+
+function updateLiveIndicator() {
+  const ind = el('live-indicator');
+  const label = el('live-indicator-label');
+  if (!ind || !label) return;
+  if (!state.isRunning) {
+    ind.style.display = 'none';
+    ind.classList.remove('paused');
+    label.textContent = 'LIVE';
+    return;
+  }
+  ind.style.display = 'flex';
+  if (state.isPaused) {
+    ind.classList.add('paused');
+    label.textContent = 'PAUSED';
+  } else {
+    ind.classList.remove('paused');
+    label.textContent = 'LIVE';
+  }
+}
+
+
+function pauseSession(reason) {
+  if (!state.isRunning || state.isPaused) return;
+  if (socket) socket.emit('pause_tracking');
+  stopTimer();
+  state.isPaused = true;
+  state.pauseReason = reason || 'manual';
+  el('timer-display').classList.remove('running');
+  updateLiveIndicator();
+  updatePauseButton();
+  if (reason === 'manual') {
+    setFeedback('Session paused', 'warn');
+  }
+}
+
+
+function resumeSession() {
+  if (!state.isRunning || !state.isPaused) return;
+  if (socket) socket.emit('resume_tracking');
+  startTimer();
+  state.isPaused = false;
+  state.pauseReason = null;
+  el('timer-display').classList.add('running');
+  updateLiveIndicator();
+  updatePauseButton();
+}
+
+
+function togglePauseResume() {
+  if (!state.isRunning) return;
+  if (state.isPaused && state.pauseReason === 'set_complete') return;
+  if (state.isPaused) resumeSession();
+  else pauseSession('manual');
+}
+
+
+function openSetCompleteModal() {
+  const plannedDone = state.sets >= state.targetSets;
+  const titleEl = el('set-complete-title');
+  const bodyEl = el('set-complete-body');
+  if (plannedDone) {
+    if (titleEl) titleEl.textContent = 'Planned sets complete';
+    if (bodyEl) {
+      bodyEl.textContent =
+        `You finished ${state.targetSets} set(s) at ${state.targetReps} reps each. ` +
+        'Continue for more reps, or end the session.';
+    }
+  } else {
+    if (titleEl) titleEl.textContent = `Set ${state.sets} of ${state.targetSets} complete`;
+    if (bodyEl) {
+      bodyEl.textContent =
+        `You completed ${state.targetReps} reps for this set. Continue to the next set, or end the session.`;
+    }
+  }
+  el('set-complete-overlay')?.classList.add('open');
+}
+
+
+function continueNextSet() {
+  el('set-complete-overlay')?.classList.remove('open');
+  state.reps = 0;
+  el('hud-rep-num').textContent = '0';
+  el('hud-phase').textContent = 'Ready — stand in frame';
+  resumeSession();
+  updateChallenge();
+}
+
+
+function endSessionFromSetModal() {
+  el('set-complete-overlay')?.classList.remove('open');
+  endSession();
 }
 
 
@@ -583,12 +734,15 @@ function onRepCompleted() {
   if (state.settings.beep) playBeep();
   if (state.voiceOn)       speak(String(state.reps));
 
-  // Set completion — when reps hit the target, increment sets and reset reps
+  // Finished a full set (e.g. 10/10): auto-pause + modal; user continues or ends
   if (state.reps >= state.targetReps) {
-    state.sets++;
-    state.reps = 0;
-    el('hud-phase').textContent = `Set ${state.sets} complete! Rest…`;
-    if (state.voiceOn) speak(`Set ${state.sets} complete. Rest up.`);
+    state.sets += 1;
+    if (state.voiceOn) speak(`Set ${state.sets} complete.`);
+    pauseSession('set_complete');
+    openSetCompleteModal();
+    updateStats();
+    updateChallenge();
+    return;
   }
 
   updateStats();
@@ -710,7 +864,9 @@ function setExercise(exKey, btn) {
   // Tell backend to switch exercises live (only if session is active)
   if (socket && state.isRunning) {
     socket.emit('change_exercise', { exercise: exKey });
-    el('camera-feed').src = `/video_feed?exercise=${exKey}`;
+    const feed = el('camera-feed');
+    feed.removeAttribute('src');
+    feed.src = `/video_feed?exercise=${encodeURIComponent(exKey)}&_=${Date.now()}`;
   }
 
   updateChallenge();
@@ -767,18 +923,42 @@ function adjustTarget(delta) {
 // toggleVoice() — called by the 🔇/🔊 button in the control bar.
 function toggleVoice() {
   state.voiceOn = !state.voiceOn;
-  el('voice-btn').textContent = state.voiceOn ? '🔊 Voice on' : '🔇 Voice off';
+  state.settings.voice = state.voiceOn;
+  const btn = el('voice-btn');
+  if (btn) btn.textContent = state.voiceOn ? '🔊 Voice on' : '🔇 Voice off';
+  const chk = el('setting-voice');
+  if (chk) chk.checked = state.voiceOn;
+  const k = userKey('settings');
+  if (k) {
+    const s = { ...getSettings(), voice: state.voiceOn };
+    saveSettingsStore(s);
+  }
 }
 
 // speak(text) — reads text aloud via browser TTS.
 // Cancels any ongoing speech first so sentences don't queue up.
 function speak(text) {
   if (!window.speechSynthesis) return;
-  const utt  = new SpeechSynthesisUtterance(text);
-  utt.rate   = 1.1; // ✅ TO CHANGE SPEED: 0.5 (slow) to 2.0 (fast)
-  utt.pitch  = 1;   // ✅ TO CHANGE PITCH: 0 (low) to 2 (high)
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utt);
+  const t = String(text ?? '').trim();
+  if (!t) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(t);
+    utt.rate  = 1.05;
+    utt.pitch = 1;
+    utt.lang  = document.documentElement.lang || 'en-US';
+    // Chrome often needs speak() on the next tick after cancel().
+    setTimeout(() => {
+      try {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.speak(utt);
+      } catch (err) {
+        console.warn('speechSynthesis.speak failed:', err);
+      }
+    }, 0);
+  } catch (err) {
+    console.warn('speechSynthesis:', err);
+  }
 }
 
 // playBeep() — generates a short sine-wave beep using the Web Audio API.
@@ -821,14 +1001,19 @@ function playBeep() {
 // Render functions are called lazily so heavy rendering only happens
 // when the tab is actually viewed, not on page load.
 function switchTab(tabId, btn) {
+  const panel = el('tab-' + tabId);
+  if (!panel) {
+    console.warn('Unknown tab:', tabId);
+    return;
+  }
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  el('tab-' + tabId).classList.add('active');
+  panel.classList.add('active');
   btn.classList.add('active');
 
-  if (tabId === 'history') renderHistory();
-  if (tabId === 'profile') renderProfile();
-  // ✅ TO ADD: if (tabId === 'newtab') renderNewTab();
+  if (tabId === 'history')  renderHistory();
+  if (tabId === 'progress') renderProgress();
+  if (tabId === 'profile')  renderProfile();
 }
 
 
@@ -881,12 +1066,14 @@ function saveSession() {
   saveSessions(sessions);
 
   // ── Reset all session counters ────────────────────────
+  state.reps         = 0;
   state.totalReps    = 0;
   state.sets         = 0;
   state.calories     = 0;
   state.formScores   = [];
   state.timerSeconds = 0;
   state.sessionStart = null;
+  el('hud-rep-num').textContent = '0';
   el('timer-display').textContent = '00:00';
   updateStats();
 }
@@ -1113,13 +1300,20 @@ function renderProfile() {
 
   // Badges grid
   renderProfileBadges(getBadges());
+}
 
-  // Exercise breakdown — horizontal proportion bars per exercise
-  const counts   = {};
+
+/* ── PROGRESS TAB ───────────────────────────────────────── */
+function renderProgress() {
+  const sessions = getSessions();
+  const exEl = el('ex-breakdown');
+  if (!exEl) return;
+
+  const counts = {};
   sessions.forEach(s => { counts[s.exercise] = (counts[s.exercise] || 0) + s.reps; });
   const maxCount = Math.max(...Object.values(counts), 1);
 
-  el('ex-breakdown').innerHTML = Object.entries(counts).map(([k, v]) => `
+  exEl.innerHTML = Object.entries(counts).map(([k, v]) => `
     <div class="ex-breakdown-item">
       <div class="ex-breakdown-name">${EXERCISES[k]?.label || k}</div>
       <div class="ex-breakdown-track">
@@ -1129,11 +1323,10 @@ function renderProfile() {
     </div>
   `).join('') || '<p style="color:var(--text-dim);font-size:13px;">No data yet</p>';
 
-  // Line charts — most recent 14 sessions (oldest → newest, left → right)
   const recent = sessions.slice(0, 14).reverse();
   const dates  = recent.map(s => new Date(s.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
 
-  drawLineChart('chart-reps', recent.map(s => s.reps),      dates, '#C8F135');
+  drawLineChart('chart-reps', recent.map(s => s.reps),       dates, '#C8F135');
   drawLineChart('chart-form', recent.map(s => s.formScore), dates, '#3b9eff');
 }
 
@@ -1293,7 +1486,26 @@ function loadSettingsUI() {
 // Currently only applies the angles toggle live mid-session.
 // ✅ TO APPLY OTHER SETTINGS LIVE: add them here.
 function updateSettings() {
+  state.voiceOn = el('setting-voice').checked;
+  state.settings.voice = state.voiceOn;
+  const vb = el('voice-btn');
+  if (vb) vb.textContent = state.voiceOn ? '🔊 Voice on' : '🔇 Voice off';
+
   const angles = el('setting-angles').checked;
+  const k = userKey('settings');
+  if (k) {
+    const s = {
+      ...getSettings(),
+      voice:       el('setting-voice').checked,
+      angles:      el('setting-angles').checked,
+      beep:        el('setting-beep').checked,
+      resolution:  el('setting-resolution').value,
+      sensitivity: el('setting-sensitivity').value,
+    };
+    Object.assign(state.settings, s);
+    saveSettingsStore(s);
+  }
+
   if (state.isRunning) {
     el('angle-left').style.display  = angles ? 'block' : 'none';
     el('angle-right').style.display = angles ? 'block' : 'none';
@@ -1347,5 +1559,6 @@ function clearAllData() {
   updateLevel();
   loadStreak();
   renderProfileBadges([]);
+  renderProgress();
   alert('All data cleared.');
 }

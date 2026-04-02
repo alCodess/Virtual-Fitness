@@ -22,7 +22,12 @@ import numpy as np
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
-from mediapipe.tasks.python.components.containers import landmark as mp_landmark
+
+def _norm_vis(lm) -> float:
+    v = getattr(lm, "visibility", None)
+    p = getattr(lm, "presence", None)
+    vals = [float(x) for x in (v, p) if x is not None]
+    return max(vals) if vals else 1.0
 
 
 # ── MODEL FILE ───────────────────────────────────────────
@@ -111,12 +116,24 @@ class PoseEngine:
             base_options=base_options,
             output_segmentation_masks=False,
             num_poses=1,
-            min_pose_detection_confidence=0.6,
-            min_pose_presence_confidence=0.6,
-            min_tracking_confidence=0.5,
-            running_mode=mp_vision.RunningMode.IMAGE,
+            min_pose_detection_confidence=0.4,
+            min_pose_presence_confidence=0.4,
+            min_tracking_confidence=0.4,
+            running_mode=mp_vision.RunningMode.VIDEO,
         )
         self.landmarker = mp_vision.PoseLandmarker.create_from_options(options)
+        self._video_ts_ms = 0
+
+    def reset_stream(self):
+        """
+        Called when a new camera session starts.
+
+        IMPORTANT: Do NOT reset `_video_ts_ms`. MediaPipe VIDEO mode keeps internal
+        state on this landmarker and requires `detect_for_video` timestamps to be
+        strictly increasing for the entire lifetime of the instance. Resetting to 0
+        after a stop/start session causes: ValueError: Input timestamp must be
+        monotonically increasing.
+        """
 
     # ── MAIN METHOD ───────────────────────────────────────
     def process(self, frame: np.ndarray):
@@ -132,10 +149,12 @@ class PoseEngine:
 
             annotated_frame — copy of frame with skeleton drawn on it.
         """
-        # Convert BGR → RGB for MediaPipe
-        rgb        = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image   = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-        detection  = self.landmarker.detect(mp_image)
+        # Convert BGR → RGB; contiguous buffer required by the task API
+        rgb       = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        rgb       = np.ascontiguousarray(rgb)
+        mp_image  = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        self._video_ts_ms += int(round(1000 / 30))
+        detection = self.landmarker.detect_for_video(mp_image, self._video_ts_ms)
 
         annotated = frame.copy()
 
@@ -160,19 +179,19 @@ class PoseEngine:
         for a_idx, b_idx in SKELETON_CONNECTIONS:
             a = landmarks[a_idx]
             b = landmarks[b_idx]
-            if a.visibility < 0.4 or b.visibility < 0.4:
+            if _norm_vis(a) < 0.35 or _norm_vis(b) < 0.35:
                 continue
             pt_a = (int(a.x * w), int(a.y * h))
             pt_b = (int(b.x * w), int(b.y * h))
-            color = _ACCENT if (a.visibility > 0.65 and b.visibility > 0.65) else _DIM
+            color = _ACCENT if (_norm_vis(a) > 0.55 and _norm_vis(b) > 0.55) else _DIM
             cv2.line(frame, pt_a, pt_b, color, 3, cv2.LINE_AA)
 
         # Draw joint dots
         for lm in landmarks:
-            if lm.visibility < 0.4:
+            if _norm_vis(lm) < 0.35:
                 continue
             pt    = (int(lm.x * w), int(lm.y * h))
-            color = _ACCENT if lm.visibility > 0.65 else _DIM
+            color = _ACCENT if _norm_vis(lm) > 0.55 else _DIM
             cv2.circle(frame, pt, 5, color,     -1, cv2.LINE_AA)
             cv2.circle(frame, pt, 5, (0, 0, 0),  1, cv2.LINE_AA)
 
@@ -181,9 +200,9 @@ class PoseEngine:
         key = [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER,
                LM.LEFT_HIP,      LM.RIGHT_HIP,
                LM.LEFT_KNEE,     LM.RIGHT_KNEE]
-        avg = sum(landmarks[i].visibility for i in key) / len(key)
+        avg = sum(_norm_vis(landmarks[i]) for i in key) / len(key)
 
-        color = (53, 241, 200) if avg >= 0.75 else (0, 140, 255) if avg >= 0.5 else (50, 50, 255)
+        color = (53, 241, 200) if avg >= 0.65 else (0, 140, 255) if avg >= 0.4 else (50, 50, 255)
         cv2.circle(frame, (28, 28), 10, color,     -1)
         cv2.circle(frame, (28, 28), 10, (0, 0, 0),  1)
 

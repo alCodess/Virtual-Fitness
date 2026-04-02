@@ -20,7 +20,16 @@
 
 import cv2
 import numpy as np
-from BackEnd.pose_engine import PoseEngine, LM
+
+from pose_engine import PoseEngine, LM
+
+
+def _lm_vis(lm) -> float:
+    """MediaPipe task landmarks expose visibility and/or presence."""
+    v = getattr(lm, "visibility", None)
+    p = getattr(lm, "presence", None)
+    vals = [float(x) for x in (v, p) if x is not None]
+    return max(vals) if vals else 1.0
 
 
 # ── THRESHOLDS BY SENSITIVITY ────────────────────────────
@@ -159,6 +168,33 @@ class ExerciseTracker:
         self.last_angles = {}
         self.form_issues = []
         self.rep_times   = []
+        if hasattr(self, "_curl_shoulder_baseline"):
+            delattr(self, "_curl_shoulder_baseline")
+
+    def preview(self, landmarks, exercise: str) -> dict:
+        """UI heartbeat when a body is in frame but the exercise analyser returned None."""
+        key_idxs = {
+            "squat":        [LM.LEFT_HIP, LM.LEFT_KNEE, LM.RIGHT_HIP, LM.RIGHT_KNEE],
+            "pushup":       [LM.LEFT_SHOULDER, LM.LEFT_ELBOW, LM.LEFT_WRIST],
+            "curl":         [LM.LEFT_ELBOW, LM.RIGHT_ELBOW],
+            "lunge":        [LM.LEFT_KNEE, LM.RIGHT_KNEE],
+            "jumping_jack": [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER],
+        }
+        idxs = key_idxs.get(
+            exercise,
+            [LM.LEFT_SHOULDER, LM.RIGHT_SHOULDER, LM.LEFT_HIP, LM.RIGHT_HIP],
+        )
+        vis = [_lm_vis(landmarks[i]) for i in idxs if i < len(landmarks)]
+        avg = sum(vis) / len(vis) if vis else 0.0
+        return {
+            "new_rep":         False,
+            "rep_count":       self.rep_count,
+            "phase":           "Pose detected — show more of your body",
+            "form_score":      75,
+            "feedback":        "Move so hips, knees, and feet stay in frame",
+            "feedback_type":   "warn",
+            "confidence":      float(avg),
+        }
 
     def update(
         self,
@@ -220,7 +256,7 @@ class ExerciseTracker:
         hip_angle  = PoseEngine.angle(l_shoulder, l_hip,  l_knee)
 
         # Visibility check — skip if landmarks not visible
-        if l_knee.visibility < 0.5 or l_hip.visibility < 0.5:
+        if _lm_vis(l_knee) < 0.35 or _lm_vis(l_hip) < 0.35:
             return None
 
         knee_down = cfg["knee_down"] + offset
@@ -281,7 +317,7 @@ class ExerciseTracker:
             "feedback_type": fb_type,
             "angle1":       knee_angle,
             "angle2":       hip_angle,
-            "confidence":   float(l_knee.visibility),
+            "confidence":   float(_lm_vis(l_knee)),
         }
 
     # ── PUSH-UP ───────────────────────────────────────────
@@ -294,7 +330,7 @@ class ExerciseTracker:
         l_hip      = lm[LM.LEFT_HIP]
         l_ankle    = lm[LM.LEFT_ANKLE]
 
-        if l_elbow.visibility < 0.5:
+        if _lm_vis(l_elbow) < 0.35:
             return None
 
         elbow_angle = PoseEngine.angle(l_shoulder, l_elbow, l_wrist)
@@ -356,15 +392,15 @@ class ExerciseTracker:
         cfg = EXERCISE_CONFIG["curl"]["thresholds"]
 
         # Use whichever arm is more visible
-        l_vis = lm[LM.LEFT_ELBOW].visibility
-        r_vis = lm[LM.RIGHT_ELBOW].visibility
+        l_vis = _lm_vis(lm[LM.LEFT_ELBOW])
+        r_vis = _lm_vis(lm[LM.RIGHT_ELBOW])
 
         if l_vis >= r_vis:
             shoulder, elbow, wrist = lm[LM.LEFT_SHOULDER], lm[LM.LEFT_ELBOW],  lm[LM.LEFT_WRIST]
         else:
             shoulder, elbow, wrist = lm[LM.RIGHT_SHOULDER],lm[LM.RIGHT_ELBOW], lm[LM.RIGHT_WRIST]
 
-        if elbow.visibility < 0.4:
+        if _lm_vis(elbow) < 0.3:
             return None
 
         elbow_angle = PoseEngine.angle(shoulder, elbow, wrist)
@@ -419,7 +455,7 @@ class ExerciseTracker:
             "feedback_type": fb_type,
             "angle1":        elbow_angle,
             "angle2":        round(drift * 100, 1),  # drift as %
-            "confidence":    float(elbow.visibility),
+            "confidence":    float(_lm_vis(elbow)),
         }
 
     # ── LUNGE ─────────────────────────────────────────────
@@ -433,7 +469,7 @@ class ExerciseTracker:
         r_knee  = lm[LM.RIGHT_KNEE]
         r_ankle = lm[LM.RIGHT_ANKLE]
 
-        if l_knee.visibility < 0.5 or r_knee.visibility < 0.5:
+        if _lm_vis(l_knee) < 0.35 or _lm_vis(r_knee) < 0.35:
             return None
 
         l_knee_angle = PoseEngine.angle(l_hip, l_knee, l_ankle)
@@ -483,7 +519,7 @@ class ExerciseTracker:
             "feedback_type": fb_type,
             "angle1":        front_angle,
             "angle2":        back_angle,
-            "confidence":    float((l_knee.visibility + r_knee.visibility) / 2),
+            "confidence":    float((_lm_vis(l_knee) + _lm_vis(r_knee)) / 2),
         }
 
     # ── JUMPING JACK ──────────────────────────────────────
@@ -497,7 +533,7 @@ class ExerciseTracker:
         r_shoulder = lm[LM.RIGHT_SHOULDER]
         r_hip      = lm[LM.RIGHT_HIP]
 
-        if l_shoulder.visibility < 0.5:
+        if _lm_vis(l_shoulder) < 0.35:
             return None
 
         # Arm spread: angle at shoulder (hip–shoulder–elbow)
@@ -548,7 +584,7 @@ class ExerciseTracker:
             "feedback_type": fb_type,
             "angle1":        arm_angle,
             "angle2":        round(leg_spread, 1),
-            "confidence":    float(l_shoulder.visibility),
+            "confidence":    float(_lm_vis(l_shoulder)),
         }
 
     # ── FRAME ANNOTATION ─────────────────────────────────

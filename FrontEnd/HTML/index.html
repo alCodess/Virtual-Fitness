@@ -332,7 +332,7 @@
           <!-- LIVE badge — shown while session is running.
                Has a pulsing red dot animation (defined in main.css). -->
           <div class="live-indicator" id="live-indicator" style="display:none;">
-            <div class="live-dot"></div>LIVE
+            <div class="live-dot" id="live-dot"></div><span id="live-indicator-label">LIVE</span>
           </div>
 
           <!-- Rep counter HUD — large number in top centre of camera.
@@ -396,6 +396,8 @@
           <button class="ctrl-btn primary" id="session-btn" onclick="toggleSession()">
             <span id="session-btn-label">▶ Start Session</span>
           </button>
+
+          <button class="ctrl-btn" id="pause-btn" style="display:none;" onclick="togglePauseResume()" type="button">⏸ Pause</button>
 
           <!-- Reset the current set rep counter without ending the session -->
           <button class="ctrl-btn" onclick="resetCurrentSet()">↺ Reset set</button>
@@ -530,6 +532,35 @@
 
 
   <!-- ══════════════════════════════════════════════════
+       6b. PROGRESS TAB
+       ────────────────────────────────────────────────
+       Charts & exercise breakdown — rendered by renderProgress() in app.js.
+  ══════════════════════════════════════════════════════ -->
+  <main class="tab-content" id="tab-progress">
+    <div class="progress-page">
+      <div class="progress-header">
+        <h1 class="page-title">Your progress</h1>
+        <p class="page-sub">Trends from your last 14 sessions · breakdown by exercise</p>
+      </div>
+      <div class="profile-grid progress-grid">
+        <div class="progress-card">
+          <div class="progress-card-title">Reps per session</div>
+          <canvas id="chart-reps" width="400" height="200"></canvas>
+        </div>
+        <div class="progress-card">
+          <div class="progress-card-title">Form accuracy %</div>
+          <canvas id="chart-form" width="400" height="200"></canvas>
+        </div>
+        <div class="progress-card" style="grid-column: 1 / -1;">
+          <div class="progress-card-title">Exercise breakdown</div>
+          <div class="ex-breakdown" id="ex-breakdown"></div>
+        </div>
+      </div>
+    </div>
+  </main><!-- /tab-progress -->
+
+
+  <!-- ══════════════════════════════════════════════════
        7. PROFILE TAB
        ────────────────────────────────────────────────
        User profile, all-time stats, badges, progress charts,
@@ -597,31 +628,6 @@
           <div class="progress-card-title">Badges</div>
           <div class="badges-grid" id="profile-badges-grid">
             <!-- Injected by renderProfileBadges() in app.js -->
-          </div>
-        </div>
-
-        <!-- Reps per session line chart.
-             Canvas drawn by drawLineChart() called from renderProfile(). -->
-        <div class="progress-card">
-          <div class="progress-card-title">Reps per Session</div>
-          <canvas id="chart-reps" width="400" height="200"></canvas>
-        </div>
-
-<<<<<<< HEAD
-=======
-        <!-- Form accuracy line chart -->
-        <div class="progress-card">
-          <div class="progress-card-title">Form Accuracy %</div>
-          <canvas id="chart-form" width="400" height="200"></canvas>
-        </div>
-
-        <!-- Exercise breakdown — horizontal proportion bars.
-             Rendered by renderProfile() in app.js.
-             ❌ TO REMOVE: delete this card and the breakdown section in renderProfile(). -->
-        <div class="progress-card">
-          <div class="progress-card-title">Exercise Breakdown</div>
-          <div class="ex-breakdown" id="ex-breakdown">
-            <!-- Injected by renderProfile() in app.js -->
           </div>
         </div>
 
@@ -750,6 +756,25 @@
     </div>
   </div>
 </div><!-- /summary-overlay -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     9b. SET COMPLETE — after each target set (auto-paused)
+══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="set-complete-overlay">
+  <div class="modal" id="set-complete-modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="set-complete-title">Set complete</h2>
+    </div>
+    <div class="modal-body">
+      <p class="set-complete-body" id="set-complete-body" style="color:var(--text-muted);line-height:1.5;margin-bottom:20px;"></p>
+      <div class="set-complete-actions" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="ctrl-btn primary" type="button" style="flex:1;min-width:140px;" onclick="continueNextSet()">Continue next set</button>
+        <button class="ctrl-btn danger" type="button" style="flex:1;min-width:140px;" onclick="endSessionFromSetModal()">End session</button>
+      </div>
+    </div>
+  </div>
+</div><!-- /set-complete-overlay -->
 
 
 <!-- ══════════════════════════════════════════════════════

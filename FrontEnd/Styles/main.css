@@ -570,6 +570,14 @@ input, select, textarea { font-family: var(--font-body); }
   backdrop-filter: blur(4px);
 }
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); animation: pulse-dot 1.2s ease-in-out infinite; }
+.live-indicator.paused {
+  border-color: rgba(255, 140, 0, 0.45);
+}
+.live-indicator.paused .live-dot {
+  background: var(--orange);
+  animation: none;
+  opacity: 1;
+}
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.35; transform: scale(0.75); }
@@ -846,6 +854,8 @@ input, select, textarea { font-family: var(--font-body); }
    Cards rendered by renderHistory() in app.js.
 ══════════════════════════════════════════════════════════ */
 .history-page   { padding: 32px; overflow-y: auto; height: 100%; flex: 1; }
+.progress-page  { padding: 32px; overflow-y: auto; height: 100%; flex: 1; }
+.progress-header { margin-bottom: 28px; }
 .page-title     { font-family: var(--font-display); font-size: 40px; letter-spacing: 2px; color: var(--text); line-height: 1; }
 .page-sub       { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
 .history-header { margin-bottom: 28px; }
